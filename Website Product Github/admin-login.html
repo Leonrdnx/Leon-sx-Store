@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Digital Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0510;
+            --card-bg: #150a25;
+            --primary: #8b5cf6;
+            --accent: #d946ef;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --border-color: #2e1d45;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0510 0%, #1a0b2e 50%, #0a0510 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+        }
+
+        .login-card {
+            background: rgba(21, 10, 37, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 3rem;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        .login-card h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #fff, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-card p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 0.8rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 1rem;
+        }
+
+        .btn-login:hover {
+            transform: scale(1.02);
+        }
+
+        .error-msg {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h2>Admin Portal</h2>
+        <p>Please sign in to continue</p>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" class="form-control" placeholder="admin@mystore.com" required>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn-login">Sign In</button>
+            <div id="errorMsg" class="error-msg">Invalid email or password</div>
+        </form>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3BrOvY4fX3Eadl5GHrD-5kXSbgRD_ODY",
+            authDomain: "payment-gateaway-admin.firebaseapp.com",
+            projectId: "payment-gateaway-admin",
+            storageBucket: "payment-gateaway-admin.firebasestorage.app",
+            messagingSenderId: "371382346906",
+            appId: "1:371382346906:web:e32e94b8b98c7ecc27eb23",
+            measurementId: "G-9M40LCKG98"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Check if already logged in
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Verify Admin Status from Firestore ONLY
+                try {
+                    const docRef = doc(db, "admins", user.email);
+                    const docSnap = await getDoc(docRef);
+
+                    if (docSnap.exists()) {
+                        window.location.href = "admin-dashboard.html";
+                    } else {
+                        // Not an admin in database
+                        console.warn("User is authenticated but not in 'admins' collection.");
+                        await signOut(auth);
+                    }
+                } catch (error) {
+                    console.error("Auth check failed:", error);
+                    await signOut(auth);
+                }
+            }
+        });
+
+        // Handle Login
+        const loginForm = document.getElementById('loginForm');
+        const errorMsg = document.getElementById('errorMsg');
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = document.querySelector('.btn-login');
+
+            btn.textContent = "Verifying...";
+            btn.disabled = true;
+            errorMsg.style.display = 'none';
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then(async (userCredential) => {
+                    const user = userCredential.user;
+
+                    // Check Firestore for Admin Role
+                    const docRef = doc(db, "admins", user.email);
+                    const docSnap = await getDoc(docRef);
+
+                    if (docSnap.exists()) {
+                        console.log("Admin verified:", user.email);
+                        window.location.href = "admin-dashboard.html";
+                    } else {
+                        throw new Error("Access Denied: You are not registered as an admin.");
+                    }
+                })
+                .catch((error) => {
+                    console.error(error);
+                    errorMsg.textContent = error.message.replace("Firebase: ", "");
+                    errorMsg.style.display = 'block';
+                    btn.textContent = "Sign In";
+                    btn.disabled = false;
+
+                    // Force logout if login succeeded but not admin
+                    if(auth.currentUser) signOut(auth);
+                });
+        });
+    </script>
+</body>
+</html>

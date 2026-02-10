@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Detail - Digital Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --card-bg: #0f0f11;
+            --primary: #8b5cf6;
+            --accent: #d946ef;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            /* Grid Pattern Background */
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-attachment: fixed;
+        }
+
+        /* Nav */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 5%;
+            background: rgba(5, 5, 5, 0.6);
+            backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #fff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-right: 2rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        /* Main Layout */
+        .main-wrapper {
+            max-width: 1200px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+        }
+
+        .product-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: start;
+            margin-bottom: 4rem;
+        }
+
+        /* Left Column */
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Title Style (Moved to Left) */
+        h1 {
+            font-size: 2.5rem;
+            line-height: 1.2;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-image-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            color: rgba(255,255,255,0.1);
+            min-height: 300px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .product-image-container img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            display: block;
+            border-radius: 20px;
+        }
+
+        .description-box {
+            background: transparent;
+            padding-top: 0;
+        }
+
+        .description-box h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            display: inline-block;
+            font-weight: 700;
+        }
+
+        .description-text {
+            color: var(--text-muted);
+            line-height: 1.8;
+            white-space: pre-line;
+            font-size: 0.95rem;
+        }
+
+        /* Right Column: Info */
+        .product-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            position: sticky;
+            top: 100px;
+        }
+
+        .breadcrumb {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        /* Price & Stock Feature Card (New Wrapper) */
+        .price-stock-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
+        }
+
+        .price-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .original-price {
+            font-size: 1rem;
+            color: var(--text-muted);
+            text-decoration: line-through;
+            opacity: 0.7;
+            margin-bottom: -5px;
+        }
+
+        .price-tag {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .stock-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .stock-status.out {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .stock-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        .stock-status.out .stock-dot {
+            background-color: #ef4444;
+            box-shadow: 0 0 8px #ef4444;
+        }
+
+        /* Variants */
+        .variant-section {
+            margin: 0.5rem 0;
+            display: none;
+        }
+
+        .variant-label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+        }
+
+        .variant-options {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .variant-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .variant-btn:hover {
+            border-color: var(--primary);
+            color: #fff;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .variant-btn.active {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: var(--primary);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.1);
+        }
+
+        /* Quantity Selector */
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .qty-label {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .qty-input-group {
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .qty-btn {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: color 0.2s;
+        }
+
+        .qty-btn:hover {
+            color: var(--primary);
+        }
+
+        .qty-input {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            width: 50px;
+            text-align: center;
+            font-weight: 600;
+            outline: none;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .qty-input::-webkit-outer-spin-button,
+        .qty-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .qty-input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        /* Customer Form */
+        .customer-form {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            margin-top: 1rem;
+        }
+
+        .form-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.9rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: #fff;
+            outline: none;
+            font-family: 'Outfit', sans-serif;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(217, 70, 239, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .product-layout {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            .product-info {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="image.png" alt="Logo" style="width: 40px; height: 40px; object-fit: contain;">
+            <div class="logo">Leon'sx Store</div>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="#" class="active">Product Detail</a>
+        </div>
+    </nav>
+
+    <div class="main-wrapper">
+        <div class="product-layout">
+            <!-- Left Column: Title, Image & Description -->
+            <div class="left-column">
+                <!-- Title Moved Here -->
+                <h1 id="prodTitle">Loading Product...</h1>
+
+                <div class="product-image-container" id="prodImageContainer">
+                    <span>IMG</span>
+                </div>
+
+                <div class="description-box">
+                    <h3>Description</h3>
+                    <div class="description-text" id="prodDesc">
+                        Loading description...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Info & Purchase -->
+            <div class="product-info">
+                <div class="breadcrumb">
+                    <a href="index.html">Products</a> / <span id="breadName">Loading...</span>
+                </div>
+
+                <!-- Price & Stock Feature Card -->
+                <div class="price-stock-wrapper">
+                    <div class="price-container">
+                        <div class="original-price" id="originalPriceTag" style="display: none;">Rp 0</div>
+                        <div class="price-tag" id="priceTag">Rp 0</div>
+                    </div>
+                    <div class="stock-status" id="stockDisplay">
+                        <span class="stock-dot"></span>
+                        <span id="stockText">Checking...</span>
+                    </div>
+                </div>
+
+                <!-- Variants Section -->
+                <div class="variant-section" id="variantSection">
+                    <span class="variant-label">Select Option:</span>
+                    <div class="variant-options" id="variantOptions">
+                        <!-- Dynamic Buttons -->
+                    </div>
+                </div>
+
+                <!-- Quantity -->
+                <div class="quantity-selector">
+                    <span class="qty-label">Quantity:</span>
+                    <div class="qty-input-group">
+                        <button class="qty-btn" onclick="updateQty(-1)">-</button>
+                        <input type="number" id="qty" class="qty-input" value="1" min="1" oninput="handleManualInput()">
+                        <button class="qty-btn" onclick="updateQty(1)">+</button>
+                    </div>
+                </div>
+
+                <!-- Customer Info Form -->
+                <div class="customer-form">
+                    <div class="form-title">Customer Details</div>
+                    <div class="form-group">
+                        <input type="text" id="custName" class="form-control" placeholder="Full Name" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" id="custEmail" class="form-control" placeholder="Email Address" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="tel" id="custPhone" class="form-control" placeholder="Phone Number (WhatsApp)" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <input type="text" id="custCoupon" class="form-control" placeholder="Coupon Code (Optional)">
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="buyNowBtn" onclick="buyNow()">Buy Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, addDoc, collection, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3BrOvY4fX3Eadl5GHrD-5kXSbgRD_ODY",
+            authDomain: "payment-gateaway-admin.firebaseapp.com",
+            projectId: "payment-gateaway-admin",
+            storageBucket: "payment-gateaway-admin.firebasestorage.app",
+            messagingSenderId: "371382346906",
+            appId: "1:371382346906:web:e32e94b8b98c7ecc27eb23",
+            measurementId: "G-9M40LCKG98"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- WORKER URL (GANTI INI) ---
+        const WORKER_URL = "https://payment-gate.amprem143.workers.dev";
+
+        // State
+        let currentProduct = null;
+        let currentVariantIndex = -1; // -1 means single product
+        let currentPrice = 0;
+        let currentOriginalPrice = 0; // New state for original price
+        let currentMaxStock = 0;
+
+        // Get ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        if (!productId) {
+            window.location.href = 'index.html';
+        }
+
+        async function loadProduct() {
+            try {
+                const docRef = doc(db, "products", productId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    currentProduct = docSnap.data();
+                    renderProduct();
+                } else {
+                    document.getElementById('prodTitle').textContent = "Product not found";
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+
+        function renderProduct() {
+            document.getElementById('prodTitle').textContent = currentProduct.name;
+            document.getElementById('breadName').textContent = currentProduct.name;
+            document.getElementById('prodDesc').textContent = currentProduct.description || "No description available.";
+
+            // Render Image
+            const imgContainer = document.getElementById('prodImageContainer');
+            if (currentProduct.imageUrl) {
+                imgContainer.innerHTML = `<img src="${currentProduct.imageUrl}" alt="${currentProduct.name}">`;
+            } else {
+                imgContainer.innerHTML = `<span>IMG</span>`;
+            }
+
+            if (currentProduct.hasVariants && currentProduct.variants && currentProduct.variants.length > 0) {
+                document.getElementById('variantSection').style.display = 'block';
+                const container = document.getElementById('variantOptions');
+                container.innerHTML = '';
+
+                currentProduct.variants.forEach((v, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'variant-btn';
+                    btn.textContent = v.name;
+                    btn.onclick = () => selectVariant(index);
+                    container.appendChild(btn);
+                });
+
+                selectVariant(0);
+            } else {
+                document.getElementById('variantSection').style.display = 'none';
+                currentVariantIndex = -1;
+                // FIX: Use stock from public document instead of accounts
+                const stock = currentProduct.stock || 0;
+                // Pass originalPrice if it exists
+                updateState(currentProduct.price, stock, currentProduct.originalPrice);
+            }
+        }
+
+        window.selectVariant = function(index) {
+            const btns = document.querySelectorAll('.variant-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            btns[index].classList.add('active');
+
+            currentVariantIndex = index;
+            const v = currentProduct.variants[index];
+
+            // FIX: Use stockCount from variant object in public document
+            const stock = v.stockCount || 0;
+            // Pass originalPrice from variant if it exists, otherwise fallback to product originalPrice or undefined
+            updateState(v.price, stock, v.originalPrice);
+        }
+
+        function updateState(price, stock, originalPrice) {
+            currentPrice = price;
+            currentMaxStock = stock;
+            currentOriginalPrice = originalPrice;
+
+            document.getElementById('priceTag').textContent = formatRupiah(currentPrice);
+
+            // Handle Original Price Display
+            const originalPriceTag = document.getElementById('originalPriceTag');
+            if (currentOriginalPrice && currentOriginalPrice > currentPrice) {
+                originalPriceTag.textContent = formatRupiah(currentOriginalPrice);
+                originalPriceTag.style.display = 'block';
+            } else {
+                originalPriceTag.style.display = 'none';
+            }
+
+            const stockDisplay = document.getElementById('stockDisplay');
+            const stockText = document.getElementById('stockText');
+
+            if (stock > 0) {
+                stockDisplay.classList.remove('out');
+                stockText.textContent = `${stock} Stock`;
+                document.getElementById('buyNowBtn').disabled = false;
+            } else {
+                stockDisplay.classList.add('out');
+                stockText.textContent = `Out of Stock`;
+                document.getElementById('buyNowBtn').disabled = true;
+            }
+
+            document.getElementById('qty').value = 1;
+            updateTotalPrice();
+        }
+
+        window.updateQty = function(change) {
+            const qtyInput = document.getElementById('qty');
+            let val = parseInt(qtyInput.value);
+            if(isNaN(val)) val = 0;
+
+            let newVal = val + change;
+            if(newVal < 1) newVal = 1;
+            if(newVal > currentMaxStock) newVal = currentMaxStock;
+
+            qtyInput.value = newVal;
+            updateTotalPrice();
+        }
+
+        window.handleManualInput = function() {
+            const qtyInput = document.getElementById('qty');
+            let val = parseInt(qtyInput.value);
+            if(isNaN(val) || val < 1) return;
+
+            if(val > currentMaxStock) qtyInput.value = currentMaxStock;
+            updateTotalPrice();
+        }
+
+        function updateTotalPrice() {
+            const qty = parseInt(document.getElementById('qty').value) || 1;
+            const total = currentPrice * qty;
+            document.getElementById('priceTag').textContent = formatRupiah(total);
+
+            // Also update original price total if visible
+            const originalPriceTag = document.getElementById('originalPriceTag');
+            if (currentOriginalPrice && currentOriginalPrice > currentPrice) {
+                 const totalOriginal = currentOriginalPrice * qty;
+                 originalPriceTag.textContent = formatRupiah(totalOriginal);
+            }
+        }
+
+        function formatRupiah(num) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
+        }
+
+        // --- Buy Now Logic (Mayar Integration) ---
+        window.buyNow = async function() {
+            const qty = parseInt(document.getElementById('qty').value) || 1;
+            const name = document.getElementById('custName').value;
+            const email = document.getElementById('custEmail').value;
+            const phone = document.getElementById('custPhone').value;
+            const coupon = document.getElementById('custCoupon').value;
+            const btn = document.getElementById('buyNowBtn');
+
+            if(!name || !email || !phone) {
+                alert("Please fill in your Name, Email, and Phone Number.");
+                return;
+            }
+
+            if(qty > currentMaxStock) {
+                alert("Not enough stock available.");
+                return;
+            }
+
+            // Validasi Harga Minimal
+            const totalAmount = currentPrice * qty;
+            if(totalAmount < 1000) {
+                alert("Minimum transaction is Rp 1.000");
+                return;
+            }
+
+            btn.textContent = "Processing...";
+            btn.disabled = true;
+
+            try {
+                // 1. Request Payment Link from Worker
+                const targetUrl = `${WORKER_URL}/api/create-transaction`;
+                console.log("Calling Worker:", targetUrl);
+
+                const response = await fetch(targetUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: totalAmount,
+                        description: `Order: ${currentProduct.name} (${currentVariantIndex !== -1 ? currentProduct.variants[currentVariantIndex].name : 'Standard'})`,
+                        customerName: name,
+                        customerEmail: email,
+                        customerPhone: phone
+                    })
+                });
+
+                const result = await response.json();
+                console.log("Worker Response:", result);
+
+                if (result.success && result.link) {
+                    // 2. Redirect to Payment Page
+                    console.log("Redirecting to:", result.link);
+                    window.location.href = result.link;
+                } else {
+                    throw new Error(result.error || "Failed to create invoice");
+                }
+
+            } catch (error) {
+                console.error("Transaction failed: ", error);
+                alert("Transaction failed: " + error.message);
+                btn.textContent = "Buy Now";
+                btn.disabled = false;
+            }
+        }
+
+        // Init
+        loadProduct();
+
+    </script>
+</body>
+</html>
