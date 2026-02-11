@@ -742,19 +742,27 @@
         </div>
     </div>
 
-    <script type="module" src="config.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { firebaseConfig, WORKER_URL } from './config.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3BrOvY4fX3Eadl5GHrD-5kXSbgRD_ODY",
+            authDomain: "payment-gateaway-admin.firebaseapp.com",
+            projectId: "payment-gateaway-admin",
+            storageBucket: "payment-gateaway-admin.firebasestorage.app",
+            messagingSenderId: "371382346906",
+            appId: "1:371382346906:web:e32e94b8b98c7ecc27eb23",
+            measurementId: "G-9M40LCKG98"
+        };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- CONFIG & SECURITY ---
-        const ADMIN_SECRET = "KUNCI_RAHASIA_SUPER_AMAN_123";
+        // --- WORKER URL ---
+        const WORKER_URL = "https://payment-gate.amprem143.workers.dev";
 
         // --- Auth ---
         onAuthStateChanged(auth, async (user) => {
@@ -846,8 +854,7 @@
                 name: name,
                 price: price ? Number(price) : null,
                 originalPrice: originalPrice ? Number(originalPrice) : null,
-                accounts: [],
-                stockType: 'fivem' // Default stock type
+                accounts: []
             };
 
             variantsState.push(newVariant);
@@ -871,28 +878,6 @@
 
                 if (variant.originalPrice && variant.originalPrice > (variant.price || 0)) {
                     priceText += ` <span style="text-decoration: line-through; color: var(--text-muted); font-size: 0.8em;">${formatRupiah(variant.originalPrice)}</span>`;
-                }
-
-                // Determine stock form HTML based on stockType
-                let stockFormHtml = '';
-                const stockType = variant.stockType || 'fivem'; // Default to fivem
-
-                if (stockType === 'fivem') {
-                    stockFormHtml = `
-                        <input type="text" class="form-control mb-2" id="email-${variant.id}" placeholder="Email">
-                        <input type="text" class="form-control mb-2" id="pass-${variant.id}" placeholder="Rockstar Pass">
-                        <input type="text" class="form-control mb-2" id="emailpass-${variant.id}" placeholder="Email Pass">
-                        <input type="text" class="form-control mb-2" id="webmail-${variant.id}" placeholder="Webmail (Note)">
-                    `;
-                } else if (stockType === 'license') {
-                    stockFormHtml = `
-                        <input type="text" class="form-control mb-2" id="license-${variant.id}" placeholder="License Code">
-                        <input type="text" class="form-control mb-2" id="note-${variant.id}" placeholder="Note (Optional)">
-                    `;
-                } else if (stockType === 'description') {
-                    stockFormHtml = `
-                        <textarea class="form-control mb-2" id="desc-${variant.id}" placeholder="Description" rows="3"></textarea>
-                    `;
                 }
 
                 card.innerHTML = `
@@ -926,48 +911,30 @@
                                     <input type="number" class="form-control mb-2" id="edit-original-${variant.id}" value="${variant.originalPrice || ''}">
                                 </div>
                             </div>
-
-                            <div class="form-group mt-2">
-                                <label style="font-size:0.8rem; color:var(--text-muted);">Stock Type</label>
-                                <select class="form-control" id="edit-type-${variant.id}" onchange="updateVariantType(${index}, this.value)">
-                                    <option value="fivem" ${stockType === 'fivem' ? 'selected' : ''}>Akun Fivem</option>
-                                    <option value="license" ${stockType === 'license' ? 'selected' : ''}>License Code</option>
-                                    <option value="description" ${stockType === 'description' ? 'selected' : ''}>Description Only</option>
-                                </select>
-                            </div>
-
-                            <button type="button" class="btn-small w-100 mt-2" onclick="updateVariantDetails(${index})">Update Details</button>
+                            <button type="button" class="btn-small w-100" onclick="updateVariantDetails(${index})">Update Details</button>
                         </div>
                     </div>
 
                     <button type="button" class="toggle-stock-btn" onclick="toggleStockForm('${variant.id}')">
-                        <span>Manage Stock (${stockType})</span>
+                        <span>Manage Stock Accounts</span>
                         <i class="fas fa-chevron-down"></i>
                     </button>
 
                     <div id="stock-form-${variant.id}" class="stock-input-area">
                         <div class="form-group">
-                            ${stockFormHtml}
-                            <button type="button" class="btn-small w-100" onclick="addAccountToVariant(${index})">Save Stock Item</button>
+                            <input type="text" class="form-control mb-2" id="email-${variant.id}" placeholder="Email / Username">
+                            <input type="text" class="form-control mb-2" id="pass-${variant.id}" placeholder="Password">
+                            <input type="text" class="form-control mb-2" id="info-${variant.id}" placeholder="Extra Info (Optional)">
+                            <button type="button" class="btn-small w-100" onclick="addAccountToVariant(${index})">Save Account</button>
                         </div>
 
                         <div class="stock-list">
-                            ${variant.accounts.map((acc, accIdx) => {
-                                let displayText = '';
-                                if (stockType === 'fivem') {
-                                    displayText = `${acc.email} | ${acc.password}`;
-                                } else if (stockType === 'license') {
-                                    displayText = `${acc.license}`;
-                                } else if (stockType === 'description') {
-                                    displayText = acc.description ? acc.description.substring(0, 30) + '...' : 'No Desc';
-                                }
-                                return `
+                            ${variant.accounts.map((acc, accIdx) => `
                                 <div class="stock-item ${acc.isSold ? 'sold' : ''}">
-                                    <span>${displayText}</span>
+                                    <span>${acc.email} : ${acc.password}</span>
                                     <button type="button" class="action-btn delete" onclick="removeAccount(${index}, ${accIdx})">&times;</button>
                                 </div>
-                                `;
-                            }).join('')}
+                            `).join('')}
                         </div>
                     </div>
                 `;
@@ -990,25 +957,11 @@
             if(form) form.classList.toggle('active');
         };
 
-        window.updateVariantType = (index, newType) => {
-            variantsState[index].stockType = newType;
-            // Optionally clear existing accounts if type changes to avoid data mismatch?
-            // For now, let's keep them but they might display weirdly if not cleared.
-            // variantsState[index].accounts = [];
-            renderVariantCards();
-             setTimeout(() => {
-                const variant = variantsState[index];
-                const form = document.getElementById(`edit-variant-form-${variant.id}`);
-                if(form) form.classList.add('active');
-            }, 50);
-        };
-
         window.updateVariantDetails = (index) => {
             const variant = variantsState[index];
             const nameInput = document.getElementById(`edit-name-${variant.id}`).value;
             const priceInput = document.getElementById(`edit-price-${variant.id}`).value;
             const originalInput = document.getElementById(`edit-original-${variant.id}`).value;
-            // Type is handled by onchange
 
             if(!nameInput) return alert("Variant name is required");
 
@@ -1026,53 +979,24 @@
 
         window.addAccountToVariant = (variantIndex) => {
             const variant = variantsState[variantIndex];
-            const stockType = variant.stockType || 'fivem';
-            let newAccount = { isSold: false };
+            const emailInput = document.getElementById(`email-${variant.id}`);
+            const passInput = document.getElementById(`pass-${variant.id}`);
+            const infoInput = document.getElementById(`info-${variant.id}`);
 
-            if (stockType === 'fivem') {
-                const email = document.getElementById(`email-${variant.id}`).value;
-                const pass = document.getElementById(`pass-${variant.id}`).value;
-                const emailpass = document.getElementById(`emailpass-${variant.id}`).value;
-                const webmail = document.getElementById(`webmail-${variant.id}`).value;
-
-                if(!email || !pass) return alert("Email and Rockstar Pass are required");
-
-                newAccount.email = email;
-                newAccount.password = pass;
-                newAccount.emailpass = emailpass;
-                newAccount.webmail = webmail; // Note field
-
-                // Clear inputs
-                document.getElementById(`email-${variant.id}`).value = '';
-                document.getElementById(`pass-${variant.id}`).value = '';
-                document.getElementById(`emailpass-${variant.id}`).value = '';
-                document.getElementById(`webmail-${variant.id}`).value = '';
-
-            } else if (stockType === 'license') {
-                const license = document.getElementById(`license-${variant.id}`).value;
-                const note = document.getElementById(`note-${variant.id}`).value;
-
-                if(!license) return alert("License Code is required");
-
-                newAccount.license = license;
-                newAccount.note = note;
-
-                // Clear inputs
-                document.getElementById(`license-${variant.id}`).value = '';
-                document.getElementById(`note-${variant.id}`).value = '';
-
-            } else if (stockType === 'description') {
-                const desc = document.getElementById(`desc-${variant.id}`).value;
-
-                if(!desc) return alert("Description is required");
-
-                newAccount.description = desc;
-
-                // Clear inputs
-                document.getElementById(`desc-${variant.id}`).value = '';
+            if(!emailInput.value || !passInput.value) {
+                return alert("Email and Password are required");
             }
 
-            variant.accounts.push(newAccount);
+            variant.accounts.push({
+                email: emailInput.value,
+                password: passInput.value,
+                info: infoInput.value,
+                isSold: false
+            });
+
+            emailInput.value = '';
+            passInput.value = '';
+            infoInput.value = '';
             renderVariantCards();
 
             setTimeout(() => {
@@ -1121,7 +1045,6 @@
                     name: v.name,
                     price: v.price || null,
                     originalPrice: v.originalPrice || null,
-                    stockType: v.stockType || 'fivem', // Save stock type publicly
                     stockCount: v.accounts ? v.accounts.filter(a => !a.isSold).length : 0
                 }));
 
@@ -1221,8 +1144,7 @@
                                 name: 'Standard',
                                 price: data.price,
                                 originalPrice: data.originalPrice || null,
-                                accounts: data.accounts,
-                                stockType: 'fivem' // Default for legacy data
+                                accounts: data.accounts
                             }];
                         }
                     }
@@ -1304,9 +1226,7 @@
             document.getElementById('prevPageBtn').disabled = page <= 1;
 
             try {
-                const response = await fetch(`${WORKER_URL}/api/list-invoices?page=${page}&pageSize=${ORDER_PAGE_SIZE}`, {
-                    headers: { 'X-Admin-Secret': ADMIN_SECRET }
-                });
+                const response = await fetch(`${WORKER_URL}/api/list-invoices?page=${page}&pageSize=${ORDER_PAGE_SIZE}`);
                 const result = await response.json();
 
                 if (!result.data || result.data.length === 0) {
@@ -1331,9 +1251,6 @@
                     const custName = order.customer ? order.customer.name : order.name;
                     const custEmail = order.customer ? order.customer.email : order.email;
 
-                    // FIX: Construct the full URL using the invoice ID (which is stored in 'link' property based on previous behavior)
-                    const invoiceUrl = `https://leonsx-store.myr.id/invoices/${order.link}`;
-
                     row.innerHTML = `
                         <td>${date}</td>
                         <td>${custName}<br><span style="font-size:0.8rem; color:var(--text-muted)">${custEmail}</span></td>
@@ -1341,7 +1258,7 @@
                         <td>${formatRupiah(order.amount)}</td>
                         <td><span class="status-badge ${badgeClass}">${status}</span></td>
                         <td>
-                            <a href="${invoiceUrl}" target="_blank" class="action-btn" style="color:var(--primary)">View Invoice</a>
+                            <a href="${order.link}" target="_blank" class="action-btn" style="color:var(--primary)">View Invoice</a>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -1357,9 +1274,7 @@
         async function loadStats() {
             try {
                 // Fetch a larger batch to calculate stats
-                const response = await fetch(`${WORKER_URL}/api/list-invoices?page=1&pageSize=100`, {
-                    headers: { 'X-Admin-Secret': ADMIN_SECRET }
-                });
+                const response = await fetch(`${WORKER_URL}/api/list-invoices?page=1&pageSize=100`);
                 const result = await response.json();
 
                 if (result.data) {
