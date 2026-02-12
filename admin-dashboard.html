@@ -175,6 +175,12 @@
             font-size: 1.5rem;
         }
 
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
         .add-btn {
             background: var(--primary);
             color: white;
@@ -188,6 +194,20 @@
 
         .add-btn:hover {
             background: var(--accent);
+        }
+
+        .filter-select {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.6rem;
+            border-radius: 8px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .filter-select option {
+            background: #1a0b2e;
         }
 
         /* Table */
@@ -231,7 +251,7 @@
             font-weight: 700;
         }
 
-        .status-badge.open {
+        .status-badge.open, .status-badge.unpaid {
             background: rgba(234, 179, 8, 0.1);
             color: #eab308;
         }
@@ -639,8 +659,16 @@
             <!-- ORDERS SECTION -->
             <div id="section-orders" class="page-section">
                 <div class="header">
-                    <h1>Order History (From Mayar)</h1>
-                    <button onclick="loadOrders(1)" class="add-btn" style="background:transparent; border:1px solid var(--border-color);">Refresh</button>
+                    <h1>Order History</h1>
+                    <div class="header-actions">
+                        <select id="orderStatusFilter" class="filter-select" onchange="loadOrders(1)">
+                            <option value="">All Status</option>
+                            <option value="paid">Paid</option>
+                            <option value="open">Unpaid</option>
+                            <option value="expired">Expired</option>
+                        </select>
+                        <button onclick="loadOrders(1)" class="add-btn" style="background:transparent; border:1px solid var(--border-color);">Refresh</button>
+                    </div>
                 </div>
 
                 <div class="table-container">
@@ -1299,6 +1327,7 @@
 
         async function loadOrders(page = 1) {
             currentOrderPage = page;
+            const statusFilter = document.getElementById('orderStatusFilter').value;
             const tbody = document.getElementById('orderTableBody');
             tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem;">Loading from Mayar...</td></tr>`;
 
@@ -1306,7 +1335,12 @@
             document.getElementById('prevPageBtn').disabled = page <= 1;
 
             try {
-                const response = await fetch(`${WORKER_URL}/api/list-invoices?page=${page}&pageSize=${ORDER_PAGE_SIZE}`, {
+                let url = `${WORKER_URL}/api/list-invoices?page=${page}&pageSize=${ORDER_PAGE_SIZE}`;
+                if (statusFilter) {
+                    url += `&status=${statusFilter}`;
+                }
+
+                const response = await fetch(url, {
                     headers: { 'X-Admin-Secret': ADMIN_SECRET }
                 });
                 const result = await response.json();
