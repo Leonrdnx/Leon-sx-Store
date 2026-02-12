@@ -5,7 +5,10 @@ export default {
     
     const MAYAR_INVOICE_CREATE = "https://api.mayar.id/hl/v1/invoice/create";
     const MAYAR_INVOICE_LIST = "https://api.mayar.id/hl/v1/invoice"; 
-    const REDIRECT_URL = "https://leonrdnxx.dev/detail-order";
+    const MAYAR_INVOICE_DETAIL = "https://api.mayar.id/hl/v1/invoice"; // + /{id}
+    
+    // Base URL untuk Redirect (Tanpa Query Param)
+    const BASE_REDIRECT_URL = "https://leonrdnxx.dev/detail-order.html";
 
     // --- SECURITY KEY (Ganti dengan password rahasia Anda) ---
     const ADMIN_SECRET = "KUNCI_RAHASIA_SUPER_AMAN_123";
@@ -35,36 +38,52 @@ export default {
             throw new Error("Invalid JSON body");
         }
 
-        // Validasi Input
-        if (!reqBody.amount || !reqBody.customerName || !reqBody.customerEmail) {
+        // 1. Sanitize & Validate Input
+        const customerName = reqBody.customerName ? reqBody.customerName.trim() : "";
+        const customerEmail = reqBody.customerEmail ? reqBody.customerEmail.trim() : "";
+        const customerPhone = reqBody.customerPhone ? reqBody.customerPhone.trim() : "0000000000";
+        const amount = parseInt(reqBody.amount);
+        const description = reqBody.description ? reqBody.description.trim() : "Order";
+
+        if (!amount || !customerName || !customerEmail) {
           throw new Error("Data tidak lengkap: amount, customerName, dan customerEmail wajib diisi.");
         }
 
-        if (parseInt(reqBody.amount) < 1000) {
+        if (amount < 1000) {
            throw new Error("Total pembayaran minimal Rp 1.000");
         }
 
-        const uniqueRef = Math.floor(Date.now() / 1000);
+        // Generate Custom Order ID (Unik)
+        // Format: ORD-{timestamp}-{random4digit}
+        const timestamp = Math.floor(Date.now() / 1000);
+        const random = Math.floor(1000 + Math.random() * 9000);
+        const orderId = `ORD-${timestamp}-${random}`;
+        
         const expiredDate = new Date();
         expiredDate.setHours(expiredDate.getHours() + 24);
 
+        // Redirect URL Dinamis dengan Order ID
+        const dynamicRedirectUrl = `${BASE_REDIRECT_URL}?id=${orderId}`;
+
         const mayarPayload = {
-          amount: parseInt(reqBody.amount), 
+          amount: amount, 
           type: "ONETIME", 
-          description: `${reqBody.description} [Ref:${uniqueRef}]`,
-          name: reqBody.customerName,
-          email: reqBody.customerEmail,
-          mobile: reqBody.customerPhone || "0000000000",
-          redirectUrl: REDIRECT_URL, 
+          description: `${description} [ID:${orderId}]`, // Masukkan ID ke deskripsi juga
+          name: customerName,
+          email: customerEmail,
+          mobile: customerPhone,
+          redirectUrl: dynamicRedirectUrl, // KUNCI: Redirect URL spesifik per order
           expiredAt: expiredDate.toISOString(),
           items: [
              {
-               description: reqBody.description,
+               description: description,
                quantity: 1,
-               rate: parseInt(reqBody.amount)
+               rate: amount
              }
           ]
         };
+
+        console.log("Sending payload to Mayar:", JSON.stringify(mayarPayload));
 
         const mayarResponse = await fetch(MAYAR_INVOICE_CREATE, {
           method: "POST",
@@ -79,36 +98,34 @@ export default {
 
         if (!mayarResponse.ok) {
           const errorMsg = mayarResult.messages || mayarResult.message || "Gagal menghubungi Mayar";
-          // Log error detail untuk debugging di dashboard worker
-          console.error("Mayar Error:", JSON.stringify(mayarResult));
-          throw new Error(errorMsg);
+          console.error("Mayar API Error:", JSON.stringify(mayarResult));
+          throw new Error(`Mayar Error: ${JSON.stringify(errorMsg)}`);
         }
 
+        // Kembalikan Order ID kita sendiri, bukan ID Invoice Mayar (meskipun kita simpan juga nanti)
         return new Response(JSON.stringify({
           success: true,
           link: mayarResult.data.link,
-          id: mayarResult.data.id,
+          invoiceId: mayarResult.data.id, // ID Invoice Mayar (untuk referensi)
+          orderId: orderId, // ID Order Kita (untuk Firestore & URL)
           status: mayarResult.status
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       }
 
-      // --- ROUTE 2: LIST INVOICES (Protected) ---
-      if (path === "/api/list-invoices" && request.method === "GET") {
-        const clientSecret = request.headers.get("x-admin-secret") || request.headers.get("X-Admin-Secret");
-        if (clientSecret !== ADMIN_SECRET) {
-            return new Response(JSON.stringify({ error: "Unauthorized" }), {
-                status: 401,
-                headers: corsHeaders
-            });
+      // --- ROUTE 2: CHECK INVOICE STATUS (Public but Safe) ---
+      // Endpoint ini digunakan oleh detail-order.html untuk memverifikasi status pembayaran
+      // Menerima parameter 'invoiceId' (ID Mayar)
+      if (path === "/api/check-invoice" && request.method === "GET") {
+        const invoiceId = url.searchParams.get("id");
+        
+        if (!invoiceId) {
+            throw new Error("Invoice ID is required");
         }
 
-        const params = url.searchParams;
-        const page = params.get("page") || "1";
-        const pageSize = params.get("pageSize") || "10";
-
-        const mayarResponse = await fetch(`${MAYAR_INVOICE_LIST}?page=${page}&pageSize=${pageSize}`, {
+        // Panggil API Mayar untuk cek detail invoice
+        const mayarResponse = await fetch(`${MAYAR_INVOICE_DETAIL}/${invoiceId}`, {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${MAYAR_API_KEY}`,
@@ -119,17 +136,17 @@ export default {
         const mayarResult = await mayarResponse.json();
 
         if (!mayarResponse.ok) {
-           return new Response(JSON.stringify({ 
-             error: "Mayar API Error", 
-             details: mayarResult,
-             endpoint: MAYAR_INVOICE_LIST
-           }), {
-             status: 500,
-             headers: { ...corsHeaders, "Content-Type": "application/json" }
-           });
+           throw new Error("Failed to fetch invoice from Mayar");
         }
 
-        return new Response(JSON.stringify(mayarResult), {
+        // Kita hanya kembalikan data penting saja ke frontend
+        return new Response(JSON.stringify({
+            success: true,
+            id: mayarResult.data.id,
+            status: mayarResult.data.status, // "PAID", "UNPAID", "EXPIRED", dll
+            amount: mayarResult.data.amount,
+            customerEmail: mayarResult.data.customer.email
+        }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       }
@@ -137,7 +154,6 @@ export default {
       // --- ROUTE 3: WEBHOOK HANDLER (Public) ---
       if (path === "/api/webhook" && request.method === "POST") {
         const webhookData = await request.json();
-        
         console.log("Webhook received:", JSON.stringify(webhookData));
 
         if (webhookData.event === "testing") {
@@ -151,15 +167,8 @@ export default {
             });
         }
 
-        if (webhookData.event === "purchase" || (webhookData.data && webhookData.data.status === "PAID")) {
-            return new Response(JSON.stringify({ 
-                status: "success", 
-                message: "Payment processed" 
-            }), {
-                status: 200,
-                headers: { ...corsHeaders, "Content-Type": "application/json" }
-            });
-        }
+        // Webhook hanya untuk logging atau trigger tambahan jika perlu
+        // Logika utama update database ada di frontend (detail-order.html) yang diverifikasi via /api/check-invoice
 
         return new Response(JSON.stringify({ status: "received" }), {
             status: 200,
@@ -173,7 +182,6 @@ export default {
       });
 
     } catch (err) {
-      // Tangkap error dan kembalikan sebagai JSON agar frontend bisa membacanya
       return new Response(JSON.stringify({
         success: false, 
         error: err.message 
