@@ -826,12 +826,14 @@
                 const result = await response.json();
                 console.log("Worker Response:", result);
 
-                if (result.success && result.link && result.id) {
+                if (result.success && result.link && result.orderId) {
                     // 2. SAVE ORDER TO FIRESTORE (Status: UNPAID)
-                    // Gunakan ID Invoice Mayar sebagai ID Dokumen Firestore agar sinkron
-                    const invoiceId = result.id;
+                    // Gunakan Custom Order ID sebagai ID Dokumen Firestore
+                    const orderId = result.orderId;
+                    const invoiceId = result.invoiceId; // Simpan juga ID Invoice Mayar
 
-                    await setDoc(doc(db, "orders", invoiceId), {
+                    await setDoc(doc(db, "orders", orderId), {
+                        orderId: orderId,
                         invoiceId: invoiceId,
                         productId: productId,
                         productName: currentProduct.name,
@@ -848,7 +850,7 @@
                         deliveredItems: [] // Array kosong untuk item yang akan dikirim nanti
                     });
 
-                    console.log("Order saved to Firestore with ID:", invoiceId);
+                    console.log("Order saved to Firestore with ID:", orderId);
 
                     // 3. Redirect to Payment Page
                     console.log("Redirecting to:", result.link);
