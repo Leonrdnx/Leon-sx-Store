@@ -476,71 +476,115 @@
 
             try {
                 await runTransaction(db, async (transaction) => {
-                    // 1. Read Product Doc to get Stock
-                    const productRef = doc(db, "products", orderData.productId);
-                    const productDoc = await transaction.get(productRef);
+                    // 1. Read Product Secret Doc (product_secrets)
+                    const secretRef = doc(db, "product_secrets", orderData.productId);
+                    const secretDoc = await transaction.get(secretRef);
 
-                    if (!productDoc.exists()) {
-                        throw new Error("Product not found!");
+                    // Also read Public Product Doc to update stock count
+                    const publicRef = doc(db, "products", orderData.productId);
+                    const publicDoc = await transaction.get(publicRef);
+
+                    if (!secretDoc.exists() || !publicDoc.exists()) {
+                        throw new Error("Product data not found!");
                     }
 
-                    const productData = productDoc.data();
+                    const secretData = secretDoc.data();
+                    const publicData = publicDoc.data();
+
                     let itemsToDeliver = [];
-                    let newAccounts = [];
-                    let newVariants = [];
+                    let newSecretVariants = [];
+                    let newPublicVariants = [];
 
                     // Logic for Variants vs Single Product
-                    if (orderData.variantIndex !== -1 && productData.variants) {
+                    if (orderData.variantIndex !== -1 && secretData.variants) {
                         // Variant Logic
-                        const variant = productData.variants[orderData.variantIndex];
-                        const accounts = variant.accounts || [];
+                        const variantIndex = orderData.variantIndex;
+                        const secretVariant = secretData.variants[variantIndex];
+                        const publicVariant = publicData.variants[variantIndex];
 
-                        if (accounts.length < orderData.quantity) {
+                        const accounts = secretVariant.accounts || [];
+
+                        // Filter unsold accounts
+                        const availableAccounts = accounts.filter(acc => !acc.isSold);
+
+                        if (availableAccounts.length < orderData.quantity) {
                             throw new Error("Stock habis saat proses pengiriman!");
                         }
 
-                        // Take items from the top
-                        itemsToDeliver = accounts.slice(0, orderData.quantity);
-                        const remainingAccounts = accounts.slice(orderData.quantity);
+                        // Take items
+                        itemsToDeliver = availableAccounts.slice(0, orderData.quantity);
 
-                        // Update Variant Data in Memory
-                        newVariants = [...productData.variants];
-                        newVariants[orderData.variantIndex] = {
-                            ...variant,
-                            accounts: remainingAccounts,
-                            stockCount: remainingAccounts.length
+                        // Mark as Sold in Secret Data
+                        // We need to find the index of these items in the original array to update them
+                        // Or simpler: just update the objects we took
+
+                        // Clone the accounts array to modify
+                        const updatedAccounts = [...accounts];
+                        let deliveredCount = 0;
+
+                        for (let i = 0; i < updatedAccounts.length; i++) {
+                            if (!updatedAccounts[i].isSold && deliveredCount < orderData.quantity) {
+                                updatedAccounts[i] = { ...updatedAccounts[i], isSold: true, soldTo: orderData.orderId };
+                                deliveredCount++;
+                            }
+                        }
+
+                        // Update Secret Variant
+                        newSecretVariants = [...secretData.variants];
+                        newSecretVariants[variantIndex] = {
+                            ...secretVariant,
+                            accounts: updatedAccounts
                         };
 
-                        // Update Product (Variant Stock)
-                        transaction.update(productRef, { variants: newVariants });
+                        // Update Public Variant Stock Count
+                        newPublicVariants = [...publicData.variants];
+                        const newStockCount = (publicVariant.stockCount || 0) - orderData.quantity;
+                        newPublicVariants[variantIndex] = {
+                            ...publicVariant,
+                            stockCount: newStockCount
+                        };
+
+                        // Update Docs
+                        transaction.update(secretRef, { variants: newSecretVariants });
+                        transaction.update(publicRef, { variants: newPublicVariants });
 
                     } else {
-                        // Single Product Logic
-                        const accounts = productData.accounts || [];
+                        // Single Product Logic (Assuming similar structure in product_secrets)
+                        const accounts = secretData.accounts || [];
+                        const availableAccounts = accounts.filter(acc => !acc.isSold);
 
-                        if (accounts.length < orderData.quantity) {
+                        if (availableAccounts.length < orderData.quantity) {
                             throw new Error("Stock habis saat proses pengiriman!");
                         }
 
-                        itemsToDeliver = accounts.slice(0, orderData.quantity);
-                        const remainingAccounts = accounts.slice(orderData.quantity);
+                        itemsToDeliver = availableAccounts.slice(0, orderData.quantity);
 
-                        // Update Product (Main Stock)
-                        transaction.update(productRef, {
-                            accounts: remainingAccounts,
-                            stock: remainingAccounts.length
-                        });
+                        const updatedAccounts = [...accounts];
+                        let deliveredCount = 0;
+
+                        for (let i = 0; i < updatedAccounts.length; i++) {
+                            if (!updatedAccounts[i].isSold && deliveredCount < orderData.quantity) {
+                                updatedAccounts[i] = { ...updatedAccounts[i], isSold: true, soldTo: orderData.orderId };
+                                deliveredCount++;
+                            }
+                        }
+
+                        // Update Secret Doc
+                        transaction.update(secretRef, { accounts: updatedAccounts });
+
+                        // Update Public Doc Stock
+                        const newStock = (publicData.stock || 0) - orderData.quantity;
+                        transaction.update(publicRef, { stock: newStock });
                     }
 
                     // 2. Update Order Doc (Set PAID & Add Items)
-                    const orderRef = doc(db, "orders", orderId); // Use orderId here
+                    const orderRef = doc(db, "orders", orderId);
                     transaction.update(orderRef, {
                         status: "PAID",
                         deliveredItems: itemsToDeliver,
-                        paidAt: new Date() // Server timestamp inside transaction is tricky, using client date is acceptable here or use serverTimestamp() if field allows
+                        paidAt: new Date()
                     });
 
-                    // Return data for rendering
                     return itemsToDeliver;
                 });
 
@@ -569,18 +613,18 @@
                 listContainer.innerHTML = `<div style="text-align:center; color:var(--text-muted);">No items delivered. Contact support.</div>`;
             } else {
                 items.forEach((item, index) => {
-                    // Determine what fields to show based on item structure
-                    // Assuming item has email/password/info or just a string
                     let contentHtml = '';
 
-                    if (typeof item === 'object') {
-                        if(item.email) contentHtml += createFieldRow('Email/User', item.email);
-                        if(item.password) contentHtml += createFieldRow('Password', item.password);
-                        if(item.info) contentHtml += createFieldRow('Info', item.info);
-                        // Fallback for other fields if needed
-                    } else {
-                        // If item is just a string (e.g. license key)
-                        contentHtml += createFieldRow('License/Data', item);
+                    // Handle structure from product_secrets
+                    if (item.email) contentHtml += createFieldRow('Email', item.email);
+                    if(item.password) contentHtml += createFieldRow('Password', item.password);
+                    if(item.emailpass) contentHtml += createFieldRow('Email Pass', item.emailpass);
+                    if(item.license) contentHtml += createFieldRow('License Key', item.license);
+                    if(item.note) contentHtml += createFieldRow('Note', item.note);
+
+                    // Fallback if empty
+                    if(contentHtml === '') {
+                         contentHtml = `<div style="padding:1rem; color:var(--text-muted);">Detail akun tersembunyi atau format tidak dikenali.</div>`;
                     }
 
                     const itemHtml = `
