@@ -395,19 +395,19 @@
 
         // Get URL Parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const invoiceId = urlParams.get('id');
+        const orderId = urlParams.get('id'); // Now we expect 'id' to be our Custom Order ID
 
-        if (!invoiceId) {
+        if (!orderId) {
             alert("No Order ID found!");
             window.location.href = 'index.html';
         }
 
         async function init() {
-            document.getElementById('displayOrderId').textContent = `ID: #${invoiceId}`;
+            document.getElementById('displayOrderId').textContent = `ID: #${orderId}`;
 
             try {
-                // 1. Get Order Data from Firestore
-                const orderRef = doc(db, "orders", invoiceId);
+                // 1. Get Order Data from Firestore using Custom Order ID
+                const orderRef = doc(db, "orders", orderId);
                 const orderSnap = await getDoc(orderRef);
 
                 if (!orderSnap.exists()) {
@@ -421,7 +421,7 @@
                     // Order already paid, show items
                     renderSuccess(orderData);
                 } else {
-                    // Order UNPAID, verify with Worker
+                    // Order UNPAID, verify with Worker using the stored Invoice ID
                     await verifyPayment(orderData);
                 }
 
@@ -446,7 +446,12 @@
             renderPending(); // Show pending state first
 
             try {
-                // Call Worker to check Mayar status
+                // Call Worker to check Mayar status using the stored Invoice ID
+                const invoiceId = orderData.invoiceId;
+                if (!invoiceId) {
+                    throw new Error("Invoice ID missing in order data");
+                }
+
                 const response = await fetch(`${WORKER_URL}/api/check-invoice?id=${invoiceId}`);
                 const result = await response.json();
 
@@ -527,7 +532,7 @@
                     }
 
                     // 2. Update Order Doc (Set PAID & Add Items)
-                    const orderRef = doc(db, "orders", invoiceId);
+                    const orderRef = doc(db, "orders", orderId); // Use orderId here
                     transaction.update(orderRef, {
                         status: "PAID",
                         deliveredItems: itemsToDeliver,
