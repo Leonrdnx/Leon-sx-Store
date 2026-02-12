@@ -617,7 +617,7 @@
     <script type="module" src="config.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, addDoc, collection, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { firebaseConfig, WORKER_URL } from './config.js';
 
         const app = initializeApp(firebaseConfig);
@@ -826,16 +826,41 @@
                 const result = await response.json();
                 console.log("Worker Response:", result);
 
-                if (result.success && result.link) {
-                    // 2. Redirect to Payment Page
+                if (result.success && result.link && result.id) {
+                    // 2. SAVE ORDER TO FIRESTORE (Status: UNPAID)
+                    // Gunakan ID Invoice Mayar sebagai ID Dokumen Firestore agar sinkron
+                    const invoiceId = result.id;
+
+                    await setDoc(doc(db, "orders", invoiceId), {
+                        invoiceId: invoiceId,
+                        productId: productId,
+                        productName: currentProduct.name,
+                        variantIndex: currentVariantIndex,
+                        variantName: currentVariantIndex !== -1 ? currentProduct.variants[currentVariantIndex].name : 'Standard',
+                        quantity: qty,
+                        totalAmount: totalAmount,
+                        customerName: name,
+                        customerEmail: email,
+                        customerPhone: phone,
+                        status: "UNPAID", // Status awal
+                        paymentLink: result.link,
+                        createdAt: serverTimestamp(),
+                        deliveredItems: [] // Array kosong untuk item yang akan dikirim nanti
+                    });
+
+                    console.log("Order saved to Firestore with ID:", invoiceId);
+
+                    // 3. Redirect to Payment Page
                     console.log("Redirecting to:", result.link);
                     window.location.href = result.link;
                 } else {
-                    throw new Error(result.error || "Failed to create invoice");
+                    // Tampilkan error lengkap dari server
+                    throw new Error(result.error || JSON.stringify(result));
                 }
 
             } catch (error) {
                 console.error("Transaction failed: ", error);
+                // Tampilkan alert dengan pesan error yang lebih detail
                 alert("Transaction failed: " + error.message);
                 btn.textContent = "Buy Now";
                 btn.disabled = false;
