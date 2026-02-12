@@ -2,9 +2,729 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details - Digital Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --card-bg: #0f0f11;
+            --primary: #8b5cf6;
+            --accent: #d946ef;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --success: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            /* Grid Pattern Background */
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-attachment: fixed;
+            overflow-x: hidden;
+        }
+
+        .page-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .order-container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Status Header */
+        .status-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: var(--success);
+            font-size: 2.5rem;
+            border: 2px solid rgba(16, 185, 129, 0.2);
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.2);
+        }
+
+        .status-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .order-id {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-family: monospace;
+            background: rgba(255,255,255,0.05);
+            padding: 0.2rem 0.8rem;
+            border-radius: 4px;
+        }
+
+        /* Product Summary */
+        .product-summary {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .prod-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .prod-price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Account Details (Dropdowns) */
+        .accounts-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .account-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .account-card:hover {
+            border-color: var(--primary);
+        }
+
+        .account-card details {
+            width: 100%;
+        }
+
+        .account-card summary {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            list-style: none;
+            color: #fff;
+        }
+
+        .account-card summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .account-card summary::after {
+            content: '\f078';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            transition: transform 0.3s;
+            color: var(--text-muted);
+        }
+
+        .account-card details[open] summary::after {
+            transform: rotate(180deg);
+        }
+
+        .account-content {
+            padding: 0 1.5rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 0.5rem;
+            padding-top: 1rem;
+        }
+
+        .field-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+            background: rgba(0,0,0,0.2);
+            padding: 0.8rem;
+            border-radius: 8px;
+        }
+
+        .field-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .field-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 0.2rem;
+        }
+
+        .field-value {
+            font-family: monospace;
+            font-size: 0.95rem;
+            color: #fff;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            margin-left: 1rem;
+            flex-shrink: 0;
+        }
+
+        .copy-btn:hover {
+            background: var(--primary);
+        }
+
+        /* Action Buttons */
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            padding: 1rem;
+            border-radius: 12px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            grid-column: span 2;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent);
+        }
+
+        .btn-outline {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-main);
+            border-color: var(--border-color);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: #fff;
+        }
+
+        .btn-home {
+            width: 100%;
+            margin-top: 1rem;
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+        }
+        .btn-home:hover {
+            color: #fff;
+        }
+
+        /* Loading State */
+        #loadingState {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .hidden { display: none; }
+
+        /* Decorative Elements */
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.4;
+            z-index: -1;
+            animation: float 15s infinite ease-in-out;
+        }
+        .blob-1 { top: 10%; left: 10%; width: 300px; height: 300px; background: var(--primary); animation-delay: 0s; }
+        .blob-2 { bottom: 10%; right: 10%; width: 350px; height: 350px; background: var(--accent); animation-delay: 3s; }
+        .blob-3 { top: 50%; left: 50%; width: 200px; height: 200px; background: #4c1d95; animation-delay: 6s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(40px, -60px) scale(1.1); }
+            66% { transform: translate(-30px, 30px) scale(0.9); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+
+        /* Decorative Abstract Elements */
+        .deco-element {
+            position: fixed;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        .deco-circle {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            top: 20%;
+            left: 15%;
+            animation: float-slow 6s infinite ease-in-out;
+        }
+
+        .deco-circle-2 {
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            bottom: 30%;
+            right: 25%;
+            animation: float-slow 5s infinite ease-in-out reverse;
+        }
+
+        .deco-cross {
+            font-size: 1.5rem;
+            color: var(--accent);
+            top: 60%;
+            right: 10%;
+            animation: spin-slow 10s infinite linear;
+        }
+
+        .deco-cross-2 {
+            font-size: 1rem;
+            color: var(--primary);
+            top: 15%;
+            left: 80%;
+            animation: spin-slow 8s infinite linear reverse;
+        }
+
+        .deco-plus {
+            font-size: 2rem;
+            color: var(--text-muted);
+            top: 25%;
+            left: 5%;
+            animation: spin-slow 12s infinite linear;
+        }
+
+        .deco-line {
+            width: 40px;
+            height: 2px;
+            background: var(--text-muted);
+            top: 30%;
+            right: 20%;
+            transform: rotate(45deg);
+            animation: pulse-fade 4s infinite ease-in-out;
+        }
+
+        .deco-line-2 {
+            width: 30px;
+            height: 2px;
+            background: var(--primary);
+            bottom: 20%;
+            left: 20%;
+            transform: rotate(-30deg);
+            animation: pulse-fade 5s infinite ease-in-out;
+        }
+
+        .deco-dots {
+            display: flex;
+            gap: 5px;
+            top: 70%;
+            left: 10%;
+        }
+
+        .deco-dots-2 {
+            display: flex;
+            gap: 5px;
+            top: 25%;
+            right: 30%;
+            transform: rotate(90deg);
+        }
+
+        .deco-dot {
+            width: 4px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: bounce-sequence 1.5s infinite ease-in-out;
+        }
+
+        .deco-dot:nth-child(2) { animation-delay: 0.2s; }
+        .deco-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        .deco-arrow-curved {
+            position: fixed;
+            top: 15%;
+            right: 15%;
+            width: 60px;
+            height: 60px;
+            stroke: var(--accent);
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: draw-path 5s infinite ease-in-out;
+            transform: rotate(15deg);
+        }
+
+        .deco-arrow-straight {
+            position: fixed;
+            bottom: 25%;
+            left: 8%;
+            width: 40px;
+            height: 20px;
+            stroke: var(--text-muted);
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 50;
+            stroke-dashoffset: 50;
+            animation: draw-path 4s infinite ease-in-out;
+            transform: rotate(-10deg);
+        }
+
+        .deco-triangle {
+            position: fixed;
+            top: 10%;
+            left: 40%;
+            width: 30px;
+            height: 30px;
+            stroke: var(--accent);
+            stroke-width: 2;
+            fill: none;
+            animation: float-slow 7s infinite ease-in-out;
+            transform: rotate(15deg);
+        }
+
+        .deco-squiggle {
+            position: fixed;
+            bottom: 40%;
+            left: 5%;
+            width: 50px;
+            height: 20px;
+            stroke: var(--primary);
+            stroke-width: 2;
+            fill: none;
+            animation: pulse-fade 6s infinite ease-in-out;
+        }
+
+        .deco-ring {
+            width: 15px;
+            height: 15px;
+            border: 2px dashed var(--primary);
+            border-radius: 50%;
+            bottom: 15%;
+            left: 50%;
+            animation: spin-slow 20s infinite linear;
+        }
+
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes spin-slow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse-fade {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes bounce-sequence {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        @keyframes draw-path {
+            0% { stroke-dashoffset: 100; opacity: 0; }
+            20% { opacity: 1; }
+            80% { stroke-dashoffset: 0; opacity: 1; }
+            100% { stroke-dashoffset: 0; opacity: 0; }
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 1rem; }
+            .order-container { padding: 1.5rem; }
+            .status-title { font-size: 1.5rem; }
+            .action-grid { grid-template-columns: 1fr; }
+            .btn-primary { grid-column: span 1; }
+        }
+    </style>
 </head>
 <body>
 
+    <!-- Decorative Blobs -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <!-- Abstract Decorative Elements -->
+    <div class="deco-element deco-circle"></div>
+    <div class="deco-element deco-circle-2"></div>
+    <div class="deco-element deco-cross">×</div>
+    <div class="deco-element deco-cross-2">×</div>
+    <div class="deco-element deco-plus">+</div>
+    <div class="deco-element deco-line"></div>
+    <div class="deco-element deco-line-2"></div>
+    <div class="deco-element deco-dots">
+        <div class="deco-dot"></div>
+        <div class="deco-dot"></div>
+        <div class="deco-dot"></div>
+    </div>
+    <div class="deco-element deco-dots-2">
+        <div class="deco-dot"></div>
+        <div class="deco-dot"></div>
+        <div class="deco-dot"></div>
+    </div>
+    <svg class="deco-element deco-arrow-curved" viewBox="0 0 100 100">
+        <path d="M10,90 Q50,10 90,50" fill="none" />
+    </svg>
+    <svg class="deco-element deco-arrow-straight" viewBox="0 0 100 20">
+        <path d="M0,10 L100,10" fill="none" />
+    </svg>
+    <svg class="deco-element deco-triangle" viewBox="0 0 30 30">
+        <polygon points="15,5 25,25 5,25" fill="none" stroke="var(--accent)" stroke-width="2" />
+    </svg>
+    <svg class="deco-element deco-squiggle" viewBox="0 0 50 20">
+        <path d="M5,10 Q15,0 25,10 T45,10" fill="none" stroke="var(--primary)" stroke-width="2" />
+    </svg>
+    <div class="deco-element deco-ring"></div>
+
+    <div class="page-wrapper">
+        <div class="order-container">
+            <!-- Loading -->
+            <div id="loadingState" class="hidden">
+                <i class="fas fa-circle-notch fa-spin fa-2x" style="color: var(--primary);"></i>
+                <p style="margin-top: 1rem; color: var(--text-muted);">Retrieving your order...</p>
+            </div>
+
+            <!-- Content -->
+            <div id="orderContent">
+                <div class="status-header">
+                    <div class="success-icon">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <h1 class="status-title">Payment Successful!</h1>
+                    <span class="order-id" id="displayOrderId">ID: #DUMMY-ORDER-123</span>
+                </div>
+
+                <div class="product-summary">
+                    <div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Product</div>
+                        <div class="prod-name" id="prodName">Loading...</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Total</div>
+                        <div class="prod-price" id="prodPrice">Rp 0</div>
+                    </div>
+                </div>
+
+                <div class="accounts-section">
+                    <label class="section-label">Your Items / Accounts</label>
+                    <div id="accountsList">
+                        <!-- Dynamic Account Dropdowns will be injected here -->
+                    </div>
+                </div>
+
+                <div class="action-grid">
+                    <a href="#" id="invoiceLink" target="_blank" class="btn btn-outline">
+                        <i class="fas fa-file-invoice"></i> View Invoice
+                    </a>
+                    <a href="https://wa.me/6281350919038" target="_blank" class="btn btn-outline">
+                        <i class="fab fa-whatsapp"></i> Contact Support
+                    </a>
+                    <a href="index.html" class="btn btn-primary">
+                        <i class="fas fa-home"></i> Back to Merchant
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // This script is now for DUMMY DATA only.
+        // Firebase logic is commented out.
+
+        // --- DUMMY DATA ---
+        const dummyData = {
+            description: "Premium ChatGPT Account (x3)",
+            amount: 450000,
+            invoiceUrl: "#", // Dummy link
+            deliveredAccounts: [
+                {
+                    email: "user1@example.com",
+                    password: "password123",
+                    info: "Valid until 2025"
+                },
+                {
+                    email: "user2_longemailaddress@example.com",
+                    password: "anotherSecurePassword!@#",
+                    info: "" // Empty info field
+                },
+                {
+                    email: "user3@example.com",
+                    password: "password_for_user3",
+                    info: "This is some extra information that might be quite long and should wrap correctly within the given space."
+                }
+            ]
+        };
+
+        function renderOrder(data) {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('orderContent').classList.remove('hidden');
+
+            // Basic Info
+            document.getElementById('prodName').textContent = data.description || "Digital Product";
+            document.getElementById('prodPrice').textContent = formatRupiah(data.amount);
+
+            if(data.invoiceUrl || data.link) {
+                document.getElementById('invoiceLink').href = data.invoiceUrl || data.link;
+            } else {
+                document.getElementById('invoiceLink').style.display = 'none';
+            }
+
+            // Render Accounts
+            const listContainer = document.getElementById('accountsList');
+            listContainer.innerHTML = '';
+
+            const accounts = data.deliveredAccounts || [];
+
+            if (accounts.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="text-align:center; padding:1rem; color:var(--text-muted); background:rgba(255,255,255,0.02); border-radius:12px;">
+                        <i class="fas fa-clock"></i> No items found in this order.
+                    </div>
+                `;
+            } else {
+                accounts.forEach((acc, index) => {
+                    const itemHtml = `
+                        <div class="account-card">
+                            <details ${index === 0 ? 'open' : ''}>
+                                <summary>
+                                    <span><i class="fas fa-box-open" style="color:var(--primary); margin-right:8px;"></i> Item #${index + 1}</span>
+                                </summary>
+                                <div class="account-content">
+                                    ${acc.email ? createFieldRow('Email / Username', acc.email) : ''}
+                                    ${acc.password ? createFieldRow('Password', acc.password) : ''}
+                                    ${acc.info ? createFieldRow('Additional Info', acc.info) : ''}
+                                </div>
+                            </details>
+                        </div>
+                    `;
+                    listContainer.innerHTML += itemHtml;
+                });
+            }
+        }
+
+        function createFieldRow(label, value) {
+            return `
+                <div class="field-row">
+                    <div style="overflow:hidden;">
+                        <span class="field-label">${label}</span>
+                        <span class="field-value">${value}</span>
+                    </div>
+                    <button class="copy-btn" onclick="copyText('${value}', this)">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            `;
+        }
+
+        function formatRupiah(num) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
+        }
+
+        // Global Copy Function
+        window.copyText = function(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalIcon = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                btn.style.background = 'var(--success)';
+
+                setTimeout(() => {
+                    btn.innerHTML = originalIcon;
+                    btn.style.background = '';
+                }, 2000);
+            });
+        }
+
+        // Init with dummy data
+        renderOrder(dummyData);
+
+    </script>
 </body>
 </html>

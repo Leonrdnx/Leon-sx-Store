@@ -861,61 +861,65 @@
             scroll-margin-top: 100px;
         }
 
-        .contact-container {
-            max-width: 600px;
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 800px;
             margin: 0 auto;
+        }
+
+        .contact-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 24px;
-            padding: 3rem;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
             backdrop-filter: blur(10px);
         }
 
-        .form-group {
+        .contact-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.2);
+        }
+
+        .contact-icon {
+            font-size: 3rem;
             margin-bottom: 1.5rem;
         }
 
-        .form-group label {
-            display: block;
+        .contact-card h3 {
+            font-size: 1.5rem;
             margin-bottom: 0.5rem;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
             color: #fff;
-            font-size: 1rem;
-            transition: all 0.3s ease;
         }
 
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.05);
+        .contact-card p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
         }
 
-        .submit-btn {
-            width: 100%;
-            padding: 1rem;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 12px;
+        .contact-btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
             font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
+            text-decoration: none;
             transition: all 0.3s ease;
         }
 
-        .submit-btn:hover {
-            background: var(--accent);
-            transform: translateY(-2px);
-        }
+        .discord-card .contact-icon { color: #5865F2; }
+        .discord-btn { background: #5865F2; color: white; }
+        .discord-btn:hover { background: #4752c4; box-shadow: 0 0 15px rgba(88, 101, 242, 0.4); }
+
+        .whatsapp-card .contact-icon { color: #25D366; }
+        .whatsapp-btn { background: #25D366; color: white; }
+        .whatsapp-btn:hover { background: #128c7e; box-shadow: 0 0 15px rgba(37, 211, 102, 0.4); }
 
         /* Footer */
         footer {
@@ -1023,13 +1027,14 @@
 
     <nav>
         <div style="display: flex; align-items: center; gap: 10px;">
-            <img src="image.png" alt="Logo" style="width: 40px; height: 40px; object-fit: contain;">
+            <img src="image.png" alt="Logo" style="width: 40px; height: 40px; object-fit: contain; border-radius: 8px;">
             <div class="logo">Leon'sx Store</div>
         </div>
         <div class="nav-links">
             <a href="#products" class="nav-link">Products</a>
             <a href="#faq" class="nav-link">FaQ</a>
             <a href="#contact" class="nav-link">Contact</a>
+            <a href="testimoni.html" class="nav-link">Testimoni</a>
         </div>
         <div class="nav-right">
             <button class="menu-btn"><i class="fas fa-bars"></i></button>
@@ -1102,7 +1107,7 @@
                     <i class="fas fa-bolt"></i>
                 </div>
                 <h3>Instant Delivery</h3>
-                <p>Get your digital products instanly delivered to your email using Mayar after payment confirmation</p>
+                <p>Get your digital products delivered to your email immediately after payment confirmation.</p>
             </div>
             <div class="feature-card reveal delay-100">
                 <div class="feature-icon">
@@ -1304,150 +1309,11 @@
         </div>
     </footer>
 
-    <script>
-        const menuBtn = document.querySelector('.menu-btn');
-        const navLinks = document.querySelector('.nav-links');
-
-        // Toggle Mobile Menu
-        menuBtn.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
-            const icon = menuBtn.querySelector('i');
-            if (navLinks.classList.contains('active')) {
-                icon.classList.remove('fa-bars');
-                icon.classList.add('fa-times');
-            } else {
-                icon.classList.remove('fa-times');
-                icon.classList.add('fa-bars');
-            }
-        });
-
-        // Smooth Scroll Function with Custom Duration
-        function smoothScroll(target, duration) {
-            var targetElem = document.querySelector(target);
-            if (!targetElem) return;
-
-            var targetPosition = targetElem.getBoundingClientRect().top + window.pageYOffset;
-            var startPosition = window.pageYOffset;
-            var headerOffset = 80; // Adjust based on navbar height
-            var distance = targetPosition - startPosition - headerOffset;
-            var startTime = null;
-
-            function animation(currentTime) {
-                if (startTime === null) startTime = currentTime;
-                var timeElapsed = currentTime - startTime;
-                var run = ease(timeElapsed, startPosition, distance, duration);
-                window.scrollTo(0, run);
-                if (timeElapsed < duration) requestAnimationFrame(animation);
-            }
-
-            // Easing function (easeInOutQuad)
-            function ease(t, b, c, d) {
-                t /= d / 2;
-                if (t < 1) return c / 2 * t * t + b;
-                t--;
-                return -c / 2 * (t * (t - 2) - 1) + b;
-            }
-
-            requestAnimationFrame(animation);
-        }
-
-        // Event Listeners for Nav Links
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                var target = this.getAttribute('href');
-                smoothScroll(target, 1000); // 1000ms duration for smooth, not too fast scroll
-
-                // Close mobile menu if open
-                if (window.innerWidth <= 768) {
-                    navLinks.classList.remove('active');
-                    const icon = menuBtn.querySelector('i');
-                    icon.classList.remove('fa-times');
-                    icon.classList.add('fa-bars');
-                }
-            });
-        });
-
-        // Scroll Spy (Active Link Highlight)
-        window.addEventListener('scroll', () => {
-            let current = '';
-            const sections = document.querySelectorAll('section, main');
-
-            sections.forEach(section => {
-                const sectionTop = section.offsetTop;
-                const sectionHeight = section.clientHeight;
-                // Offset logic to trigger active state a bit earlier
-                if (pageYOffset >= (sectionTop - 150)) {
-                    current = section.getAttribute('id');
-                }
-            });
-
-            document.querySelectorAll('.nav-link').forEach(li => {
-                li.classList.remove('active');
-                if (current && li.getAttribute('href').includes(current)) {
-                    li.classList.add('active');
-                }
-            });
-        });
-
-        // FAQ Animation Logic
-        document.querySelectorAll('.faq-item details').forEach((detail) => {
-            detail.addEventListener('click', (e) => {
-                e.preventDefault(); // Prevent default toggle behavior
-
-                const content = detail.querySelector('p');
-
-                if (detail.hasAttribute('open')) {
-                    // Close animation
-                    detail.removeAttribute('open');
-                } else {
-                    // Open animation
-                    // Close other details first (optional, for accordion effect)
-                    document.querySelectorAll('.faq-item details[open]').forEach(otherDetail => {
-                        if (otherDetail !== detail) {
-                            otherDetail.removeAttribute('open');
-                        }
-                    });
-
-                    detail.setAttribute('open', '');
-                }
-            });
-        });
-
-        // --- SCROLL ANIMATION OBSERVER ---
-        const observerOptions = {
-            threshold: 0.15,
-            rootMargin: "0px 0px -50px 0px"
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    observer.unobserve(entry.target); // Only animate once
-                }
-            });
-        }, observerOptions);
-
-        // Observe static elements
-        document.querySelectorAll('.reveal').forEach(el => {
-            observer.observe(el);
-        });
-    </script>
-
+    <script type="module" src="config.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyC3BrOvY4fX3Eadl5GHrD-5kXSbgRD_ODY",
-            authDomain: "payment-gateaway-admin.firebaseapp.com",
-            projectId: "payment-gateaway-admin",
-            storageBucket: "payment-gateaway-admin.firebasestorage.app",
-            messagingSenderId: "371382346906",
-            appId: "1:371382346906:web:e32e94b8b98c7ecc27eb23",
-            measurementId: "G-9M40LCKG98"
-        };
+        import { firebaseConfig, WORKER_URL } from './config.js';
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -1456,7 +1322,7 @@
         async function loadProducts() {
             const grid = document.getElementById('productGrid');
             const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
-            
+
             try {
                 const querySnapshot = await getDocs(q);
                 grid.innerHTML = "";
@@ -1533,8 +1399,143 @@
 
         loadProducts();
     </script>
+    <script>
+        const menuBtn = document.querySelector('.menu-btn');
+        const navLinks = document.querySelector('.nav-links');
+
+        // Toggle Mobile Menu
+        menuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            const icon = menuBtn.querySelector('i');
+            if (navLinks.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
+
+        // Smooth Scroll Function with Custom Duration
+        function smoothScroll(target, duration) {
+            var targetElem = document.querySelector(target);
+            if (!targetElem) return;
+
+            var targetPosition = targetElem.getBoundingClientRect().top + window.pageYOffset;
+            var startPosition = window.pageYOffset;
+            var headerOffset = 80; // Adjust based on navbar height
+            var distance = targetPosition - startPosition - headerOffset;
+            var startTime = null;
+
+            function animation(currentTime) {
+                if (startTime === null) startTime = currentTime;
+                var timeElapsed = currentTime - startTime;
+                var run = ease(timeElapsed, startPosition, distance, duration);
+                window.scrollTo(0, run);
+                if (timeElapsed < duration) requestAnimationFrame(animation);
+            }
+
+            // Easing function (easeInOutQuad)
+            function ease(t, b, c, d) {
+                t /= d / 2;
+                if (t < 1) return c / 2 * t * t + b;
+                t--;
+                return -c / 2 * (t * (t - 2) - 1) + b;
+            }
+
+            requestAnimationFrame(animation);
+        }
+
+        // Event Listeners for Nav Links
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                // Check if it's a hash link on the same page
+                const href = this.getAttribute('href');
+                if (href.startsWith('#')) {
+                    e.preventDefault();
+                    smoothScroll(href, 1000); // 1000ms duration for smooth, not too fast scroll
+                }
+                // If it's a link to another page (like testimoni.html), let it navigate normally
+
+                // Close mobile menu if open
+                if (window.innerWidth <= 768) {
+                    navLinks.classList.remove('active');
+                    const icon = menuBtn.querySelector('i');
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            });
+        });
+
+        // Scroll Spy (Active Link Highlight)
+        window.addEventListener('scroll', () => {
+            let current = '';
+            const sections = document.querySelectorAll('section, main');
+
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                // Offset logic to trigger active state a bit earlier
+                if (pageYOffset >= (sectionTop - 150)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            document.querySelectorAll('.nav-link').forEach(li => {
+                // Only modify active class for hash links
+                const href = li.getAttribute('href');
+                if (href.startsWith('#')) {
+                    li.classList.remove('active');
+                    if (current && href.includes(current)) {
+                        li.classList.add('active');
+                    }
+                }
+            });
+        });
+
+        // FAQ Animation Logic
+        document.querySelectorAll('.faq-item details').forEach((detail) => {
+            detail.addEventListener('click', (e) => {
+                e.preventDefault(); // Prevent default toggle behavior
+
+                const content = detail.querySelector('p');
+
+                if (detail.hasAttribute('open')) {
+                    // Close animation
+                    detail.removeAttribute('open');
+                } else {
+                    // Open animation
+                    // Close other details first (optional, for accordion effect)
+                    document.querySelectorAll('.faq-item details[open]').forEach(otherDetail => {
+                        if (otherDetail !== detail) {
+                            otherDetail.removeAttribute('open');
+                        }
+                    });
+
+                    detail.setAttribute('open', '');
+                }
+            });
+        });
+
+        // --- SCROLL ANIMATION OBSERVER ---
+        const observerOptions = {
+            threshold: 0.15,
+            rootMargin: "0px 0px -50px 0px"
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target); // Only animate once
+                }
+            });
+        }, observerOptions);
+
+        // Observe static elements
+        document.querySelectorAll('.reveal').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
 </body>
 </html>
-
-
-

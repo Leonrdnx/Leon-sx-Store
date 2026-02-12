@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testimoni - Testimoni From Customer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --card-bg: #0f0f11;
+            --primary: #8b5cf6;
+            --accent: #d946ef;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Navbar (Consistent with index.html) */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 5%;
+            background: rgba(5, 5, 5, 0.3);
+            backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #fff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #fff;
+        }
+
+        /* Active indicator */
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Testimoni Section */
+        .testimoni-header {
+            text-align: center;
+            padding: 4rem 5% 2rem;
+        }
+
+        .testimoni-header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(to bottom right, #ffffff 30%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .testimoni-header p {
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .memories-container {
+            padding: 3rem 5% 6rem;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Polaroid Style */
+        .polaroid {
+            background: #fff;
+            padding: 12px 12px 40px 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 100%;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            cursor: pointer;
+            filter: brightness(0.9);
+        }
+
+        .polaroid:hover {
+            transform: scale(1.1) rotate(0deg) !important;
+            z-index: 50;
+            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.3);
+            filter: brightness(1.1);
+        }
+
+        .polaroid-img {
+            width: 100%;
+            aspect-ratio: 1/1;
+            background-color: #eee;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .polaroid-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        /* Placeholder for when no image is present */
+        .polaroid-img.placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #aaa;
+            font-size: 3rem;
+            background: #f0f0f0;
+        }
+
+        .polaroid-caption {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-family: 'Courier New', Courier, monospace; /* Handwriting style font */
+            color: #333;
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: -0.5px;
+        }
+
+        /* Random Rotations & Positions for "Collage" feel */
+        .polaroid:nth-child(odd) {
+            transform: rotate(-3deg);
+        }
+
+        .polaroid:nth-child(even) {
+            transform: rotate(2deg);
+            margin-top: 2rem;
+        }
+
+        .polaroid:nth-child(3n) {
+            transform: rotate(4deg);
+            margin-top: -1rem;
+        }
+
+        .polaroid:nth-child(3n+1) {
+            transform: rotate(-2deg);
+        }
+
+        .polaroid:nth-child(5n) {
+            transform: rotate(-5deg);
+            margin-top: 3rem;
+        }
+
+        /* Footer (Consistent) */
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 3rem 5%;
+            background: rgba(5, 5, 5, 0.5);
+            margin-top: auto;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .footer-brand {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .footer-copyright {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer-right {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .social-link:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: rgba(5, 5, 5, 0.95);
+                backdrop-filter: blur(20px);
+                border-bottom: 1px solid var(--border-color);
+                padding: 2rem;
+                flex-direction: column;
+                align-items: center;
+                gap: 1.5rem;
+                display: none;
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .nav-links a {
+                margin-right: 0;
+                font-size: 1.2rem;
+            }
+
+            .menu-btn {
+                display: block;
+            }
+
+            .memories-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 3rem;
+                padding: 2rem 5% 4rem; /* Adjusted padding for mobile */
+            }
+
+            .polaroid {
+                width: 100%; /* Full width on mobile */
+                max-width: 320px; /* Limit max width */
+            }
+
+            .polaroid:nth-child(n) {
+                margin-top: 0;
+                transform: rotate(0deg); /* Reset rotation on mobile for better readability */
+            }
+
+            .polaroid:nth-child(odd) {
+                transform: rotate(-1deg);
+            }
+
+            .polaroid:nth-child(even) {
+                transform: rotate(1deg);
+            }
+
+            .testimoni-header h1 {
+                font-size: 2.5rem; /* Smaller font on mobile */
+            }
+        }
+
+        /* --- MODAL / POPUP STYLES --- */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9); /* Black w/ opacity */
+            backdrop-filter: blur(8px);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 80vh;
+            border-radius: 4px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            object-fit: contain;
+            animation: zoom 0.3s ease;
+        }
+
+        @keyframes zoom {
+            from {transform: scale(0.8); opacity: 0;}
+            to {transform: scale(1); opacity: 1;}
+        }
+
+        .modal-caption {
+            margin-top: 15px;
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            z-index: 1001;
+        }
+
+        .close-modal:hover {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="image.png" alt="Logo" style="width: 40px; height: 40px; object-fit: contain; border-radius: 8px;">
+            <div class="logo">Leon'sx Store</div>
+        </div>
+        <div class="nav-links">
+            <a href="index.html#products">Products</a>
+            <a href="index.html#faq">FaQ</a>
+            <a href="index.html#contact">Contact</a>
+            <a href="#" class="active">Testimoni</a>
+        </div>
+        <div class="nav-right">
+            <button class="menu-btn"><i class="fas fa-bars"></i></button>
+        </div>
+    </nav>
+
+    <header class="testimoni-header">
+        <h1>Testimoni From Customer</h1>
+        <p>Toko kami sudah buka sejak 2024 dan berfokus pada penjualan Fivem Ready
+            dan sekarang sudah mulai banyak mengeluarkan product baru,
+            ini beberapa testimoni dari pelanggan setia kami.</p>
+    </header>
+
+    <main class="memories-container">
+        <!-- 15 Static Polaroids (Placeholders) -->
+        <div class="polaroid">
+            <div class="polaroid-img placeholder">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="polaroid-caption">Loading...</div>
+        </div>
+        
+        <div class="polaroid">
+            <div class="polaroid-img placeholder">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="polaroid-caption">Loading...</div>
+        </div>
+
+        <div class="polaroid">
+            <div class="polaroid-img placeholder">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="polaroid-caption">Loading...</div>
+        </div>
+
+        <div class="polaroid">
+            <div class="polaroid-img placeholder">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="polaroid-caption">Loading...</div>
+        </div>
+
+        <div class="polaroid">
+            <div class="polaroid-img placeholder">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="polaroid-caption">Loading...</div>
+        </div>
+
+        <div class="polaroid">
+            <div class="polaroid-img placeholder">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="polaroid-caption">Loading...</div>
+        </div>
+
+        <div class="polaroid">
+            <div class="polaroid-img placeholder">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="polaroid-caption">Loading...</div>
+        </div>
+
+        <div class="polaroid">
+            <div class="polaroid-img placeholder">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="polaroid-caption">Loading...</div>
+        </div>
+
+        <div class="polaroid">
+            <div class="polaroid-img placeholder">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="polaroid-caption">Loading...</div>
+        </div>
+
+        <div class="polaroid">
+            <div class="polaroid-img placeholder">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="polaroid-caption">Loading...</div>
+        </div>
+
+        <div class="polaroid">
+            <div class="polaroid-img placeholder">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="polaroid-caption">Loading...</div>
+        </div>
+
+        <div class="polaroid">
+            <div class="polaroid-img placeholder">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="polaroid-caption">Loading...</div>
+        </div>
+
+        <div class="polaroid">
+            <div class="polaroid-img placeholder">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="polaroid-caption">Loading...</div>
+        </div>
+
+        <div class="polaroid">
+            <div class="polaroid-img placeholder">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="polaroid-caption">Loading...</div>
+        </div>
+
+        <div class="polaroid">
+            <div class="polaroid-img placeholder">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="polaroid-caption">Loading...</div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-left">
+                <div class="footer-brand">Leon'sx Store</div>
+                <div class="footer-copyright">&copy; 2026 • All rights reserved.</div>
+            </div>
+            <div class="footer-right">
+                <a href="#" class="social-link"><i class="fab fa-discord"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-tiktok"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Image Modal Structure -->
+    <div id="imageModal" class="modal">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" id="modalImage">
+        <div id="modalCaption" class="modal-caption"></div>
+    </div>
+
+    <script>
+        const menuBtn = document.querySelector('.menu-btn');
+        const navLinks = document.querySelector('.nav-links');
+
+        menuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            const icon = menuBtn.querySelector('i');
+            if (navLinks.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
+
+        // --- GOOGLE SHEETS CONNECTION ---
+        // GANTI URL DI BAWAH INI DENGAN URL WEB APP KAMU DARI LANGKAH DEPLOY
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwroxWmrv0s73KY8fG6Vyh9iiKHmcY0A0cuMhapA6ihmcbISwc4Pf4ck9jsupykfbyf/exec';
+
+        fetch(scriptURL)
+            .then(response => response.json())
+            .then(data => {
+                const container = document.querySelector('.memories-container');
+                const polaroids = document.querySelectorAll('.polaroid');
+
+                data.forEach((item, index) => {
+                    // Jika masih dalam range 15 polaroid awal, gunakan yang sudah ada
+                    if (index < polaroids.length) {
+                        const polaroid = polaroids[index];
+                        const imgContainer = polaroid.querySelector('.polaroid-img');
+                        const caption = polaroid.querySelector('.polaroid-caption');
+
+                        // Hapus class placeholder agar background abu-abu hilang
+                        imgContainer.classList.remove('placeholder');
+                        
+                        // Masukkan gambar dari link spreadsheet
+                        imgContainer.innerHTML = `<img src="${item.image}" alt="${item.caption}" loading="lazy">`;
+                        
+                        // Update caption
+                        caption.textContent = item.caption;
+                    } else {
+                        // Jika data lebih dari 15, buat elemen polaroid baru (GENERATE BORDER BARU)
+                        const newPolaroid = document.createElement('div');
+                        newPolaroid.classList.add('polaroid');
+                        newPolaroid.innerHTML = `
+                            <div class="polaroid-img">
+                                <img src="${item.image}" alt="${item.caption}" loading="lazy">
+                            </div>
+                            <div class="polaroid-caption">${item.caption}</div>
+                        `;
+                        container.appendChild(newPolaroid);
+                    }
+                });
+
+                // Sembunyikan placeholder sisa jika data kurang dari 15 (supaya tidak ada kotak "Loading..." kosong)
+                if (data.length < polaroids.length) {
+                    for (let i = data.length; i < polaroids.length; i++) {
+                        polaroids[i].style.display = 'none';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error!', error.message);
+            });
+
+        // --- MODAL LOGIC ---
+        const modal = document.getElementById("imageModal");
+        const modalImg = document.getElementById("modalImage");
+        const modalCaption = document.getElementById("modalCaption");
+        const closeBtn = document.querySelector(".close-modal");
+        const memoriesContainer = document.querySelector('.memories-container');
+
+        // Event Delegation: Mendeteksi klik pada container polaroid
+        memoriesContainer.addEventListener('click', function(e) {
+            // Cek apakah yang diklik adalah bagian dari polaroid
+            const polaroid = e.target.closest('.polaroid');
+            
+            // Pastikan polaroid ada isinya (bukan placeholder loading)
+            if (polaroid && !polaroid.querySelector('.placeholder')) {
+                const img = polaroid.querySelector('img');
+                const caption = polaroid.querySelector('.polaroid-caption');
+                
+                if (img) {
+                    modal.style.display = "flex"; // Tampilkan modal
+                    modalImg.src = img.src;       // Ambil gambar dari polaroid
+                    modalCaption.textContent = caption.textContent; // Ambil caption
+                }
+            }
+        });
+
+        // Tutup modal saat tombol X diklik
+        closeBtn.onclick = () => modal.style.display = "none";
+        
+        // Tutup modal saat klik di area gelap (luar gambar)
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = "none";
+            }
+        });
+    </script>
+</body>
+</html>
