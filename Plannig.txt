@@ -1,0 +1,40 @@
+PLANNING
+
+1. Tambahkan logika jika user mengklik tombol buy now dan sudah masuk ke dalam invoices mayar nya agar angka stock di landing page dan detail product itu ikut berkurang
+2. Tambahkan logika agar stock yang ada di admin dashboard, detail product, dan landing page bisa menjadi realtime
+3. Tambahkan logika untuk mengatasi orderan yang bertabrakan misalnya stock hanya 1 tapi yang ingin beli ada 2 orang, jadi siapa cepat dia dapat 
+4. Panel Admin = Tambahkan fitur list pesanan lengkap dengan nama, email, invoice, product yang di pesan, saat user melakukan checkout barang dan sudah masuk kedalam mayar 
+tepatnya pada sesi pembayaran, tampilkan status realtime nya kedalam dashboard admin apakah itu paid/unpaid/canceled, sebagai admin bisa meng cancel orderan dari admin dashboard ke
+invoices tertentu apabila status masih unpaid cancel orderan itu hanya untuk mengembalikan data akun stock dan mengembalikan jumlah stock yang sebelumnya sudah di kurangi di landing page dan detail product menjadi semula sebelum di checkout
+oleh user
+
+
+
+
+1. Responsif Detail Product ✔
+2. Buat Detail Order isinya itu ada Status Pembayaran Berhasil, Nama Barang/Product, Total Harga, Detail Akun/Item (Detail akunnya buat agar menjadi dropdown dan menampilkan sesuai field dari yang ada di admin dashboard,
+Jika user membeli lebih dari 1 stock maka buat dropdown nya lagi kebawah sesuai jumlah yang di beli user, buat agar masing masing drop down ada tombol salinnya di sampingnya), Kontak Support, Lihat Invoices (mengarah ke invoices mayar), 
+Kembali Ke Merchant (kembali ke landing page) Buat agar detail order nya ini unik ambil dari product id ✔
+3. Tambahkan logika saat jika suatu pesanan sudah berhasil agar bisa mengambil 1 stock teratas dari admin dashboard yang nantinya akan di tampilkan pada 1 invoices di Detail Order
+yang kemudian akan menandai stock yang sudah terjual ke dalam admin dashboard dan mengurangi angka stock di halaman landing page dan detail product, buat agar realtime
+
+
+
+SAAT SUDAH VERIF
+
+1. Buat fitur rating bintang dari 1-5 di halaman detail order, isi nya ada pilih berapa bintang dan dibawah nya
+ada deskripsinya (deskripsi ini ga wajib) jadi jika customer hanya memberi bintang nya saja tanpa rating maka ada pesan
+template nantinya, dan bintang juga deskripsi nya ini kita bisa atur dari admin dashboard lengkap dengan nama customer yang memberi rating
+kita bisa edit nantinya, tambahkan logika agar 1 Invoices hanya bisa 1 kali Rating, dan tambahkan batas rating nya,
+jika dalam kurun waktu 1 hari user tidak melakukan rating maka akan otomatis memberi bintang 5 lengkap dengan template deskripsi nya
+
+sistem nya ini dibuat dari spreedsheet (Google Apps Script) nanti disambungin ke backdoor kode ku.
+
+2. Nanti jika spreedsheet sudah beres, maka selanjutnya buat lagi section untuk reviews, ada di navbar atas
+nantinya jika user memencet maka akan membuka laman baru dan di page itu isinya ada
+List Bintang, Nama masing masing customer, dan barang yang di beli, untuk tema nya sesuaikan seperti di index html
+
+3. Membuat webhook untuk discord, setiap ada pesanan masuk akan tampil webhook di server discord lengkap dengan email, nama, product,
+total harga, status pesanan (Unpaid/Paid/Cancel)
+
+

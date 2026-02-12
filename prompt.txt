@@ -1,0 +1,43 @@
+
+nahh aku sekarang udah terverifikasi nih, jadi aku sudah bisa bayar dan buat payment gateaway, disini aku bisa menambahkan url webhook di website mayar nya,
+
+dan ini yang ada di halaman integrasi webhook :
+
+input "Masukkan url webhook" ; Button Simpan ; Test URL ; Docs (https://documenter.getpostman.com/view/25084670/2s8Z6x1sr8#fa4d6349-a91d-4e81-bf01-80d1fb59806f) Baca Dokumetasi ini
+
+Notifikasi Event
+Aktifkan toggle untuk mengaktifkan/nonaktifkan pengiriman data event ke server webhook Anda.
+
+Purchase
+Notifikasi pembelian produk
+
+
+Reminder
+Notifikasi pembelian yang belum dibayar
+
+
+New Membership
+Notifikasi keanggotaan baru
+
+
+Membership Expired
+Notifikasi keanggotaan berakhir
+
+
+Membership Change Tier
+Notifikasi berubah tier keanggotaan
+
+
+Tracking
+Notifikasi pelacakan resi tracking kurir
+
+
+Membership Topup Credit
+Notifikasi topup credit keanggotaan
+
+
+Membership Unsubscribe
+Notifikasi keanggotaan berhenti
+
+nah sekarang alur nya gini, jadi aku generate webhook url nya dari worker, nantinya saat pembayaran mayar di terima akan langsung direct
+ke detail order tepatnya link ini https://leonrdnxx.dev/detail-order nah buat agar link ini di belakangnya ada invoice nya

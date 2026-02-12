@@ -5,18 +5,18 @@ export default {
     
     const MAYAR_INVOICE_CREATE = "https://api.mayar.id/hl/v1/invoice/create";
     const MAYAR_INVOICE_LIST = "https://api.mayar.id/hl/v1/invoice"; 
-    const REDIRECT_URL = "https://google.com";
+    const REDIRECT_URL = "https://leonrdnxx.dev/detail-order";
 
     // --- SECURITY KEY (Ganti dengan password rahasia Anda) ---
-    // Ini mencegah orang lain mengakses data order Anda lewat URL worker
     const ADMIN_SECRET = "KUNCI_RAHASIA_SUPER_AMAN_123";
 
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret", // Izinkan header custom
+      "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret",
     };
 
+    // Handle OPTIONS request for CORS preflight
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
     }
@@ -27,12 +27,17 @@ export default {
 
     try {
       // --- ROUTE 1: CREATE TRANSACTION (Public) ---
-      // Endpoint ini tetap publik agar customer bisa beli
       if (path === "/api/create-transaction" && request.method === "POST") {
-        const reqBody = await request.json();
+        let reqBody;
+        try {
+            reqBody = await request.json();
+        } catch (e) {
+            throw new Error("Invalid JSON body");
+        }
 
+        // Validasi Input
         if (!reqBody.amount || !reqBody.customerName || !reqBody.customerEmail) {
-          throw new Error("Data tidak lengkap");
+          throw new Error("Data tidak lengkap: amount, customerName, dan customerEmail wajib diisi.");
         }
 
         if (parseInt(reqBody.amount) < 1000) {
@@ -50,7 +55,7 @@ export default {
           name: reqBody.customerName,
           email: reqBody.customerEmail,
           mobile: reqBody.customerPhone || "0000000000",
-          redirectUrl: REDIRECT_URL,
+          redirectUrl: REDIRECT_URL, 
           expiredAt: expiredDate.toISOString(),
           items: [
              {
@@ -74,6 +79,8 @@ export default {
 
         if (!mayarResponse.ok) {
           const errorMsg = mayarResult.messages || mayarResult.message || "Gagal menghubungi Mayar";
+          // Log error detail untuk debugging di dashboard worker
+          console.error("Mayar Error:", JSON.stringify(mayarResult));
           throw new Error(errorMsg);
         }
 
@@ -88,10 +95,7 @@ export default {
       }
 
       // --- ROUTE 2: LIST INVOICES (Protected) ---
-      // Endpoint ini HANYA untuk Admin
       if (path === "/api/list-invoices" && request.method === "GET") {
-
-        // Cek Header Rahasia
         const clientSecret = request.headers.get("x-admin-secret") || request.headers.get("X-Admin-Secret");
         if (clientSecret !== ADMIN_SECRET) {
             return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -130,12 +134,46 @@ export default {
         });
       }
 
+      // --- ROUTE 3: WEBHOOK HANDLER (Public) ---
+      if (path === "/api/webhook" && request.method === "POST") {
+        const webhookData = await request.json();
+        
+        console.log("Webhook received:", JSON.stringify(webhookData));
+
+        if (webhookData.event === "testing") {
+             return new Response(JSON.stringify({ 
+                 status: "success", 
+                 message: "Webhook test received successfully!",
+                 receivedData: webhookData
+             }), {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+        }
+
+        if (webhookData.event === "purchase" || (webhookData.data && webhookData.data.status === "PAID")) {
+            return new Response(JSON.stringify({ 
+                status: "success", 
+                message: "Payment processed" 
+            }), {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+        }
+
+        return new Response(JSON.stringify({ status: "received" }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
       return new Response(JSON.stringify({ error: "Endpoint not found", path: path }), { 
         status: 404, 
         headers: corsHeaders 
       });
 
     } catch (err) {
+      // Tangkap error dan kembalikan sebagai JSON agar frontend bisa membacanya
       return new Response(JSON.stringify({
         success: false, 
         error: err.message 

@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: Cek apakah user adalah admin
+    function isAdmin() {
+      return request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
+    }
+
+    // 1. Koleksi ADMINS
+    // Izinkan user membaca dokumen admin mereka sendiri untuk verifikasi login
+    match /admins/{email} {
+      allow read: if request.auth != null && request.auth.token.email == email;
+      allow write: if false; // Admin hanya bisa ditambahkan manual lewat Console
+    }
+
+    // 2. Koleksi PRODUCTS (PUBLIK)
+    // Semua orang boleh baca info produk (Nama, Harga, Gambar, Stok)
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 3. Koleksi RAHASIA (PRIVATE)
+    // HANYA ADMIN yang boleh baca/tulis detail akun (Email/Pass)
+    match /product_secrets/{productId} {
+      allow read, write: if isAdmin();
+    }
+
+    // 4. Koleksi ORDERS
+    match /orders/{orderId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
