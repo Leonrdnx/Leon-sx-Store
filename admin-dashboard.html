@@ -1286,6 +1286,9 @@
                     let totalStock = data.stock || 0;
 
                     if (data.hasVariants && data.variants) {
+                        // Calculate total stock from variants to ensure accuracy
+                        totalStock = data.variants.reduce((acc, v) => acc + (v.stockCount || 0), 0);
+
                         const prices = data.variants.map(v => v.price || data.price);
                         const minPrice = Math.min(...prices);
                         priceDisplay = `From ${formatRupiah(minPrice)}`;
@@ -1337,7 +1340,7 @@
             try {
                 let url = `${WORKER_URL}/api/list-invoices?page=${page}&pageSize=${ORDER_PAGE_SIZE}`;
                 if (statusFilter) {
-                    url += `&status=${statusFilter}`;
+                    url += `&status=${statusFilter.toUpperCase()}`;
                 }
 
                 const response = await fetch(url, {
@@ -1357,12 +1360,13 @@
 
                 result.data.forEach(order => {
                     const status = order.status;
+                    const statusLower = status.toLowerCase();
                     const row = document.createElement('tr');
                     const date = new Date(order.createdAt).toLocaleDateString();
 
                     let badgeClass = 'open';
-                    if(status === 'paid') badgeClass = 'paid';
-                    if(status === 'expired' || status === 'closed') badgeClass = 'expired';
+                    if(statusLower === 'paid') badgeClass = 'paid';
+                    if(statusLower === 'expired' || statusLower === 'closed') badgeClass = 'expired';
 
                     const custName = order.customer ? order.customer.name : order.name;
                     const custEmail = order.customer ? order.customer.email : order.email;
@@ -1407,8 +1411,9 @@
                     total = result.total || result.data.length;
 
                     result.data.forEach(order => {
-                        if(order.status === 'paid') completed++;
-                        else if(order.status === 'open') pending++;
+                        const s = order.status ? order.status.toLowerCase() : '';
+                        if(s === 'paid') completed++;
+                        else if(s === 'open') pending++;
                     });
 
                     document.getElementById('totalOrders').textContent = total;
