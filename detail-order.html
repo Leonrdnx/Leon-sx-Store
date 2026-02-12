@@ -457,8 +457,6 @@
 
                 if (result.success && result.status === "PAID") {
                     // Delivery Success!
-                    // Reload page to fetch updated data from Firestore or use returned data
-                    // Using returned data is faster
                     renderSuccess({ deliveredItems: result.deliveredItems });
                 } else {
                     // Still unpaid or error
@@ -494,6 +492,7 @@
                     if (item.email) contentHtml += createFieldRow('Email', item.email);
                     if(item.password) contentHtml += createFieldRow('Password', item.password);
                     if(item.emailpass) contentHtml += createFieldRow('Email Pass', item.emailpass);
+                    if(item.webmail) contentHtml += createFieldRow('Webmail', item.webmail); // Added Webmail
                     if(item.license) contentHtml += createFieldRow('License Key', item.license);
                     if(item.note) contentHtml += createFieldRow('Note', item.note);
 
