@@ -387,7 +387,7 @@
     <script type="module" src="config.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, runTransaction, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { firebaseConfig, WORKER_URL } from './config.js';
 
         const app = initializeApp(firebaseConfig);
@@ -395,7 +395,7 @@
 
         // Get URL Parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const orderId = urlParams.get('id'); // Now we expect 'id' to be our Custom Order ID
+        const orderId = urlParams.get('id');
 
         if (!orderId) {
             alert("No Order ID found!");
@@ -406,7 +406,7 @@
             document.getElementById('displayOrderId').textContent = `ID: #${orderId}`;
 
             try {
-                // 1. Get Order Data from Firestore using Custom Order ID
+                // 1. Get Order Data from Firestore (Read-Only)
                 const orderRef = doc(db, "orders", orderId);
                 const orderSnap = await getDoc(orderRef);
 
@@ -421,8 +421,8 @@
                     // Order already paid, show items
                     renderSuccess(orderData);
                 } else {
-                    // Order UNPAID, verify with Worker using the stored Invoice ID
-                    await verifyPayment(orderData);
+                    // Order UNPAID, call Secure Worker to process delivery
+                    await requestDelivery(orderId, orderData.paymentLink);
                 }
 
             } catch (error) {
@@ -442,159 +442,32 @@
             document.getElementById('prodPrice').textContent = formatRupiah(data.totalAmount);
         }
 
-        async function verifyPayment(orderData) {
+        async function requestDelivery(orderId, paymentLink) {
             renderPending(); // Show pending state first
 
             try {
-                // Call Worker to check Mayar status using the stored Invoice ID
-                const invoiceId = orderData.invoiceId;
-                if (!invoiceId) {
-                    throw new Error("Invoice ID missing in order data");
-                }
-
-                const response = await fetch(`${WORKER_URL}/api/check-invoice?id=${invoiceId}`);
-                const result = await response.json();
-
-                // FIX: Check for "paid" (lowercase) as well
-                if (result.success && (result.status === "PAID" || result.status === "paid")) {
-                    // Payment Confirmed! Now process delivery.
-                    await processDelivery(orderData);
-                } else {
-                    // Still unpaid or expired
-                    renderPending(result.status, orderData.paymentLink);
-                }
-            } catch (error) {
-                console.error("Verification failed:", error);
-                // Keep showing pending state if verification fails (network error etc)
-            }
-        }
-
-        async function processDelivery(orderData) {
-            document.getElementById('loadingState').classList.remove('hidden');
-            document.getElementById('loadingState').querySelector('p').textContent = "Processing delivery...";
-            document.getElementById('orderContent').classList.add('hidden');
-
-            try {
-                await runTransaction(db, async (transaction) => {
-                    // 1. Read Product Secret Doc (product_secrets)
-                    const secretRef = doc(db, "product_secrets", orderData.productId);
-                    const secretDoc = await transaction.get(secretRef);
-
-                    // Also read Public Product Doc to update stock count
-                    const publicRef = doc(db, "products", orderData.productId);
-                    const publicDoc = await transaction.get(publicRef);
-
-                    if (!secretDoc.exists() || !publicDoc.exists()) {
-                        throw new Error("Product data not found!");
-                    }
-
-                    const secretData = secretDoc.data();
-                    const publicData = publicDoc.data();
-
-                    let itemsToDeliver = [];
-                    let newSecretVariants = [];
-                    let newPublicVariants = [];
-
-                    // Logic for Variants vs Single Product
-                    if (orderData.variantIndex !== -1 && secretData.variants) {
-                        // Variant Logic
-                        const variantIndex = orderData.variantIndex;
-                        const secretVariant = secretData.variants[variantIndex];
-                        const publicVariant = publicData.variants[variantIndex];
-
-                        const accounts = secretVariant.accounts || [];
-
-                        // Filter unsold accounts
-                        const availableAccounts = accounts.filter(acc => !acc.isSold);
-
-                        if (availableAccounts.length < orderData.quantity) {
-                            throw new Error("Stock habis saat proses pengiriman!");
-                        }
-
-                        // Take items
-                        itemsToDeliver = availableAccounts.slice(0, orderData.quantity);
-
-                        // Mark as Sold in Secret Data
-                        // We need to find the index of these items in the original array to update them
-                        // Or simpler: just update the objects we took
-
-                        // Clone the accounts array to modify
-                        const updatedAccounts = [...accounts];
-                        let deliveredCount = 0;
-
-                        for (let i = 0; i < updatedAccounts.length; i++) {
-                            if (!updatedAccounts[i].isSold && deliveredCount < orderData.quantity) {
-                                updatedAccounts[i] = { ...updatedAccounts[i], isSold: true, soldTo: orderData.orderId };
-                                deliveredCount++;
-                            }
-                        }
-
-                        // Update Secret Variant
-                        newSecretVariants = [...secretData.variants];
-                        newSecretVariants[variantIndex] = {
-                            ...secretVariant,
-                            accounts: updatedAccounts
-                        };
-
-                        // Update Public Variant Stock Count
-                        newPublicVariants = [...publicData.variants];
-                        const newStockCount = (publicVariant.stockCount || 0) - orderData.quantity;
-                        newPublicVariants[variantIndex] = {
-                            ...publicVariant,
-                            stockCount: newStockCount
-                        };
-
-                        // Update Docs
-                        transaction.update(secretRef, { variants: newSecretVariants });
-                        transaction.update(publicRef, { variants: newPublicVariants });
-
-                    } else {
-                        // Single Product Logic (Assuming similar structure in product_secrets)
-                        const accounts = secretData.accounts || [];
-                        const availableAccounts = accounts.filter(acc => !acc.isSold);
-
-                        if (availableAccounts.length < orderData.quantity) {
-                            throw new Error("Stock habis saat proses pengiriman!");
-                        }
-
-                        itemsToDeliver = availableAccounts.slice(0, orderData.quantity);
-
-                        const updatedAccounts = [...accounts];
-                        let deliveredCount = 0;
-
-                        for (let i = 0; i < updatedAccounts.length; i++) {
-                            if (!updatedAccounts[i].isSold && deliveredCount < orderData.quantity) {
-                                updatedAccounts[i] = { ...updatedAccounts[i], isSold: true, soldTo: orderData.orderId };
-                                deliveredCount++;
-                            }
-                        }
-
-                        // Update Secret Doc
-                        transaction.update(secretRef, { accounts: updatedAccounts });
-
-                        // Update Public Doc Stock
-                        const newStock = (publicData.stock || 0) - orderData.quantity;
-                        transaction.update(publicRef, { stock: newStock });
-                    }
-
-                    // 2. Update Order Doc (Set PAID & Add Items)
-                    const orderRef = doc(db, "orders", orderId);
-                    transaction.update(orderRef, {
-                        status: "PAID",
-                        deliveredItems: itemsToDeliver,
-                        paidAt: new Date()
-                    });
-
-                    return itemsToDeliver;
+                // Call Secure Worker Endpoint
+                const response = await fetch(`${WORKER_URL}/api/process-delivery`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId: orderId })
                 });
 
-                // Transaction Success! Reload page to show data
-                window.location.reload();
+                const result = await response.json();
 
+                if (result.success && result.status === "PAID") {
+                    // Delivery Success!
+                    // Reload page to fetch updated data from Firestore or use returned data
+                    // Using returned data is faster
+                    renderSuccess({ deliveredItems: result.deliveredItems });
+                } else {
+                    // Still unpaid or error
+                    renderPending("UNPAID", paymentLink);
+                    if(result.error) console.error("Worker Error:", result.error);
+                }
             } catch (error) {
-                console.error("Delivery Transaction Failed:", error);
-                alert("Gagal memproses pengiriman: " + error.message + ". Silakan hubungi admin.");
-                renderError("Delivery Failed. Contact Admin.");
+                console.error("Delivery Request Failed:", error);
+                // Keep showing pending state
             }
         }
 
@@ -603,6 +476,9 @@
             icon.className = 'status-icon success';
             icon.innerHTML = '<i class="fas fa-check"></i>';
             document.getElementById('statusTitle').textContent = "Payment Successful!";
+
+            // Show accounts section
+            document.getElementById('accountsSection').style.display = 'block';
 
             const listContainer = document.getElementById('accountsList');
             listContainer.innerHTML = '';
@@ -615,14 +491,12 @@
                 items.forEach((item, index) => {
                     let contentHtml = '';
 
-                    // Handle structure from product_secrets
                     if (item.email) contentHtml += createFieldRow('Email', item.email);
                     if(item.password) contentHtml += createFieldRow('Password', item.password);
                     if(item.emailpass) contentHtml += createFieldRow('Email Pass', item.emailpass);
                     if(item.license) contentHtml += createFieldRow('License Key', item.license);
                     if(item.note) contentHtml += createFieldRow('Note', item.note);
 
-                    // Fallback if empty
                     if(contentHtml === '') {
                          contentHtml = `<div style="padding:1rem; color:var(--text-muted);">Detail akun tersembunyi atau format tidak dikenali.</div>`;
                     }
