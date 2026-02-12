@@ -1,5 +1,0 @@
-Hal yang harus di perbaiki saat sudah di verif mayar nanti
-
-1. Benerin Section Contact nya agar muncul card nya
-2. Jadikan ini berconfig dan menyembunyikan semua API yang ada di dalam file html
-3. View Invoices di admin dashboard 404 not found saat pesanan dibuat ✔
