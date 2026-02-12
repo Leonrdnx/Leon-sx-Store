@@ -1286,9 +1286,6 @@
                     let totalStock = data.stock || 0;
 
                     if (data.hasVariants && data.variants) {
-                        // Calculate total stock from variants to ensure accuracy
-                        totalStock = data.variants.reduce((acc, v) => acc + (v.stockCount || 0), 0);
-
                         const prices = data.variants.map(v => v.price || data.price);
                         const minPrice = Math.min(...prices);
                         priceDisplay = `From ${formatRupiah(minPrice)}`;
