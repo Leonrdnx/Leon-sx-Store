@@ -956,6 +956,8 @@
                                 let displayText = '';
                                 if (stockType === 'fivem') {
                                     displayText = `${acc.email} | ${acc.password}`;
+                                    if(acc.emailpass) displayText += ` | ${acc.emailpass}`;
+                                    if(acc.webmail) displayText += ` | ${acc.webmail}`;
                                 } else if (stockType === 'license') {
                                     displayText = `${acc.license}`;
                                 } else if (stockType === 'description') {
