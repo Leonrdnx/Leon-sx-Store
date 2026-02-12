@@ -579,7 +579,7 @@
                         <i class="fas fa-check"></i>
                     </div>
                     <h1 class="status-title">Payment Successful!</h1>
-                    <span class="order-id" id="displayOrderId">ID: #DUMMY-ORDER-123</span>
+                    <span class="order-id" id="displayOrderId">ID: #LOADING</span>
                 </div>
 
                 <div class="product-summary">
@@ -615,38 +615,91 @@
         </div>
     </div>
 
+    <script type="module" src="config.js"></script>
     <script type="module">
-        // This script is now for DUMMY DATA only.
-        // Firebase logic is commented out.
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { firebaseConfig } from './config.js';
 
-        // --- DUMMY DATA ---
-        const dummyData = {
-            description: "Premium ChatGPT Account (x3)",
-            amount: 450000,
-            invoiceUrl: "#", // Dummy link
-            deliveredAccounts: [
-                {
-                    email: "user1@example.com",
-                    password: "password123",
-                    info: "Valid until 2025"
-                },
-                {
-                    email: "user2_longemailaddress@example.com",
-                    password: "anotherSecurePassword!@#",
-                    info: "" // Empty info field
-                },
-                {
-                    email: "user3@example.com",
-                    password: "password_for_user3",
-                    info: "This is some extra information that might be quite long and should wrap correctly within the given space."
-                }
-            ]
-        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- Get URL Parameters ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const invoiceId = urlParams.get('id'); // Mayar sends ?id=...
+        const status = urlParams.get('status'); // Mayar sends ?status=...
+
+        async function loadOrderDetails() {
+            if (!invoiceId) {
+                alert("No Order ID found!");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('orderContent').classList.add('hidden');
+            document.getElementById('displayOrderId').textContent = `ID: #${invoiceId}`;
+
+            try {
+                // 1. Cek status pembayaran (bisa dari URL atau query ke Mayar via Worker jika perlu)
+                // Untuk saat ini kita asumsikan jika redirect ke sini, user sudah bayar atau kita cek statusnya.
+                // Jika status=PAID atau sejenisnya.
+
+                // 2. Ambil data transaksi dari Firestore (jika Anda menyimpannya saat create transaction)
+                // ATAU, jika Anda belum simpan ke Firestore, Anda mungkin perlu mengambil detail dari Mayar API via Worker.
+                // TAPI, biasanya flow yang benar adalah:
+                // User Checkout -> Worker (Create Invoice) -> Simpan 'pending' order di Firestore -> Redirect Mayar
+                // Webhook Mayar -> Worker (Update Firestore jadi 'paid') -> User Redirect ke sini -> Baca Firestore.
+
+                // KARENA SAYA TIDAK TAHU STRUKTUR DATABASE ANDA, SAYA AKAN MEMBUAT CONTOH
+                // BAGAIMANA MENGAMBIL DATA DARI FIRESTORE BERDASARKAN INVOICE ID.
+
+                // Asumsi: Anda punya collection 'orders' dengan document ID = invoiceId
+                // const docRef = doc(db, "orders", invoiceId);
+                // const docSnap = await getDoc(docRef);
+
+                // if (docSnap.exists()) {
+                //     const data = docSnap.data();
+                //     renderOrder(data);
+                // } else {
+                //     // Jika data belum ada (mungkin webhook belum masuk), tampilkan pesan tunggu atau dummy sementara
+                //     console.log("Order not found in DB yet. Waiting for webhook...");
+                //     // Tampilkan data dummy atau loading
+                     renderDummyData();
+                // }
+
+            } catch (error) {
+                console.error("Error loading order:", error);
+                alert("Failed to load order details.");
+            } finally {
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('orderContent').classList.remove('hidden');
+            }
+        }
+
+        function renderDummyData() {
+             const dummyData = {
+                description: "Menunggu Konfirmasi Sistem...",
+                amount: 0,
+                invoiceUrl: "#",
+                deliveredAccounts: []
+            };
+
+            // Update UI
+            document.getElementById('prodName').textContent = dummyData.description;
+            document.getElementById('prodPrice').textContent = "Rp -";
+
+            const listContainer = document.getElementById('accountsList');
+            listContainer.innerHTML = `
+                <div style="text-align:center; padding:2rem; color:var(--text-muted); background:rgba(255,255,255,0.02); border-radius:12px;">
+                    <i class="fas fa-sync fa-spin" style="font-size: 2rem; margin-bottom: 1rem; color: var(--primary);"></i>
+                    <p>Kami sedang memverifikasi pembayaran Anda.</p>
+                    <p style="font-size: 0.9rem;">Mohon tunggu sebentar atau refresh halaman ini.</p>
+                </div>
+            `;
+        }
 
         function renderOrder(data) {
-            document.getElementById('loadingState').classList.add('hidden');
-            document.getElementById('orderContent').classList.remove('hidden');
-
             // Basic Info
             document.getElementById('prodName').textContent = data.description || "Digital Product";
             document.getElementById('prodPrice').textContent = formatRupiah(data.amount);
@@ -666,7 +719,7 @@
             if (accounts.length === 0) {
                 listContainer.innerHTML = `
                     <div style="text-align:center; padding:1rem; color:var(--text-muted); background:rgba(255,255,255,0.02); border-radius:12px;">
-                        <i class="fas fa-clock"></i> No items found in this order.
+                        <i class="fas fa-clock"></i> Produk sedang disiapkan...
                     </div>
                 `;
             } else {
@@ -722,8 +775,8 @@
             });
         }
 
-        // Init with dummy data
-        renderOrder(dummyData);
+        // Start
+        loadOrderDetails();
 
     </script>
 </body>
