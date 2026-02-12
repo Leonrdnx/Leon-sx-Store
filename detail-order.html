@@ -455,7 +455,8 @@
                 const response = await fetch(`${WORKER_URL}/api/check-invoice?id=${invoiceId}`);
                 const result = await response.json();
 
-                if (result.success && result.status === "PAID") {
+                // FIX: Check for "paid" (lowercase) as well
+                if (result.success && (result.status === "PAID" || result.status === "paid")) {
                     // Payment Confirmed! Now process delivery.
                     await processDelivery(orderData);
                 } else {
