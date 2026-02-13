@@ -976,7 +976,7 @@
                     <div id="stock-form-${variant.id}" class="stock-input-area">
                         <div class="form-group">
                             ${stockFormHtml}
-                            <button type="button" class="btn-small w-100" onclick="addAccountToVariant(${index})">Save Stock Item</button>
+                            <button type="button" class="btn-small w-100" id="btn-save-stock-${variant.id}" onclick="addAccountToVariant(${index})">Save Stock Item</button>
                         </div>
 
                         <div class="stock-list">
@@ -988,13 +988,17 @@
                                     if(acc.webmail) displayText += ` | ${acc.webmail}`;
                                 } else if (stockType === 'license') {
                                     displayText = `${acc.license}`;
+                                    if(acc.note) displayText += ` | ${acc.note}`;
                                 } else if (stockType === 'description') {
                                     displayText = acc.description ? acc.description.substring(0, 30) + '...' : 'No Desc';
                                 }
                                 return `
                                 <div class="stock-item ${acc.isSold ? 'sold' : ''}">
                                     <span>${displayText}</span>
-                                    <button type="button" class="action-btn delete" onclick="removeAccount(${index}, ${accIdx})">&times;</button>
+                                    <div style="display:flex; gap:0.5rem;">
+                                        <button type="button" class="action-btn edit" onclick="editAccount(${index}, ${accIdx})"><i class="fas fa-pen"></i></button>
+                                        <button type="button" class="action-btn delete" onclick="removeAccount(${index}, ${accIdx})">&times;</button>
+                                    </div>
                                 </div>
                                 `;
                             }).join('')}
@@ -1004,6 +1008,97 @@
                 container.appendChild(card);
             });
         }
+
+        window.editAccount = (variantIndex, accountIndex) => {
+            const variant = variantsState[variantIndex];
+            const account = variant.accounts[accountIndex];
+            const stockType = variant.stockType || 'fivem';
+
+            // Populate inputs
+            if (stockType === 'fivem') {
+                document.getElementById(`email-${variant.id}`).value = account.email || '';
+                document.getElementById(`pass-${variant.id}`).value = account.password || '';
+                document.getElementById(`emailpass-${variant.id}`).value = account.emailpass || '';
+                document.getElementById(`webmail-${variant.id}`).value = account.webmail || '';
+            } else if (stockType === 'license') {
+                document.getElementById(`license-${variant.id}`).value = account.license || '';
+                document.getElementById(`note-${variant.id}`).value = account.note || '';
+            } else if (stockType === 'description') {
+                document.getElementById(`desc-${variant.id}`).value = account.description || '';
+            }
+
+            // Change button to Update
+            const btn = document.getElementById(`btn-save-stock-${variant.id}`);
+            if(btn) {
+                btn.textContent = "Update Stock Item";
+                btn.onclick = () => updateAccount(variantIndex, accountIndex);
+
+                // Add Cancel button
+                let cancelBtn = document.getElementById(`btn-cancel-stock-${variant.id}`);
+                if(!cancelBtn) {
+                    cancelBtn = document.createElement('button');
+                    cancelBtn.type = 'button';
+                    cancelBtn.id = `btn-cancel-stock-${variant.id}`;
+                    cancelBtn.className = 'btn-small w-100 mt-2';
+                    cancelBtn.style.background = 'rgba(239, 68, 68, 0.2)';
+                    cancelBtn.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                    cancelBtn.textContent = "Cancel Edit";
+                    cancelBtn.onclick = () => cancelEditAccount(variantIndex);
+                    btn.parentNode.appendChild(cancelBtn);
+                }
+            }
+
+            // Ensure form is visible
+            const form = document.getElementById(`stock-form-${variant.id}`);
+            if(form && !form.classList.contains('active')) {
+                form.classList.add('active');
+            }
+        };
+
+        window.cancelEditAccount = (variantIndex) => {
+            renderVariantCards();
+            setTimeout(() => {
+                const variant = variantsState[variantIndex];
+                const form = document.getElementById(`stock-form-${variant.id}`);
+                if(form) form.classList.add('active');
+            }, 50);
+        };
+
+        window.updateAccount = (variantIndex, accountIndex) => {
+            const variant = variantsState[variantIndex];
+            const stockType = variant.stockType || 'fivem';
+            const account = variant.accounts[accountIndex];
+
+            if (stockType === 'fivem') {
+                const email = document.getElementById(`email-${variant.id}`).value;
+                const pass = document.getElementById(`pass-${variant.id}`).value;
+                if(!email || !pass) return alert("Email and Rockstar Pass are required");
+
+                account.email = email;
+                account.password = pass;
+                account.emailpass = document.getElementById(`emailpass-${variant.id}`).value;
+                account.webmail = document.getElementById(`webmail-${variant.id}`).value;
+
+            } else if (stockType === 'license') {
+                const license = document.getElementById(`license-${variant.id}`).value;
+                if(!license) return alert("License Code is required");
+
+                account.license = license;
+                account.note = document.getElementById(`note-${variant.id}`).value;
+
+            } else if (stockType === 'description') {
+                const desc = document.getElementById(`desc-${variant.id}`).value;
+                if(!desc) return alert("Description is required");
+
+                account.description = desc;
+            }
+
+            renderVariantCards();
+            setTimeout(() => {
+                const form = document.getElementById(`stock-form-${variant.id}`);
+                if(form) form.classList.add('active');
+            }, 50);
+        };
 
         window.removeVariant = (index) => {
             variantsState.splice(index, 1);
