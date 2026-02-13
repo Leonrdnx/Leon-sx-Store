@@ -384,6 +384,7 @@
             <a href="index.html#products" class="nav-link">Products</a>
             <a href="index.html#faq" class="nav-link">FaQ</a>
             <a href="index.html#contact" class="nav-link">Contact</a>
+            <a href="testimoni.html" class="nav-link">Testimoni</a>
             <a href="review.html" class="nav-link active">Reviews</a>
         </div>
         <div class="nav-right">
@@ -428,13 +429,22 @@
 
     <script>
         // REPLACE THIS URL WITH YOUR ACTUAL GOOGLE APPS SCRIPT WEB APP URL
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxIpNGDSh33lJtFDChiUXczdpU_xqbZ5mGhILqIenHO_VijX1ttreIiuzBdx49XhVJ5/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxsUZQU_ZEKi2AEwTPRlMd0vY2ZaPSjy4wcEpGsam8FS8vFQuQX6vGVoW6mI296XMTQ/exec";
 
         async function loadReviews() {
             const grid = document.getElementById('reviewsGrid');
 
             try {
-                const response = await fetch(SCRIPT_URL);
+                // Added redirect: 'follow' to handle Google's 302 redirects
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const result = await response.json();
 
                 if (result.status === 'success' && result.data) {
@@ -499,7 +509,10 @@
                 grid.innerHTML = `
                     <div class="loading-container">
                         <p style="color: #ef4444;">Failed to load reviews.</p>
-                        <p style="font-size: 0.8rem;">Please check if the Google Script URL is correct and deployed.</p>
+                        <p style="font-size: 0.8rem;">${error.message}</p>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
+                            Note: If you are the admin, please ensure you have deployed the Google Apps Script as a <strong>New Version</strong> after adding the doGet function.
+                        </p>
                     </div>
                 `;
             }
