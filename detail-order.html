@@ -444,6 +444,10 @@
                     <button class="btn btn-primary" id="submitReviewBtn" onclick="submitReview()">Submit Review</button>
                 </div>
 
+                <div id="contactSupportLabel" style="display:none; text-align:center; margin-bottom:1rem;">
+                    <label class="section-label">Contact Support</label>
+                </div>
+
                 <div class="action-grid" id="actionButtons">
                     <!-- Buttons will be injected here -->
                 </div>
@@ -553,6 +557,9 @@
                 document.getElementById('reviewSection').style.display = 'block';
             }
 
+            // Show Contact Support Label
+            document.getElementById('contactSupportLabel').style.display = 'block';
+
             const listContainer = document.getElementById('accountsList');
             listContainer.innerHTML = '';
 
@@ -595,7 +602,10 @@
             const btnContainer = document.getElementById('actionButtons');
             btnContainer.innerHTML = `
                 <a href="https://wa.me/6281350919038" target="_blank" class="btn btn-outline">
-                    <i class="fab fa-whatsapp"></i> Help
+                    <i class="fab fa-whatsapp"></i> Whatsapp
+                </a>
+                <a href="https://discord.gg/8Ew7rctZSM" target="_blank" class="btn btn-outline">
+                    <i class="fab fa-discord"></i> Discord
                 </a>
                 <a href="index.html" class="btn btn-primary">
                     <i class="fas fa-home"></i> Back to Home
@@ -611,6 +621,7 @@
 
             document.getElementById('accountsSection').style.display = 'none';
             document.getElementById('reviewSection').style.display = 'none';
+            document.getElementById('contactSupportLabel').style.display = 'none';
 
             const btnContainer = document.getElementById('actionButtons');
             btnContainer.innerHTML = `
