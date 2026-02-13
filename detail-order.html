@@ -260,6 +260,59 @@
             background: var(--primary);
         }
 
+        /* Review Section */
+        .review-section {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            display: none; /* Hidden by default */
+        }
+
+        .star-rating {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            direction: rtl; /* Right to left for hover effect logic */
+        }
+
+        .star-rating input {
+            display: none;
+        }
+
+        .star-rating label {
+            font-size: 2rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .star-rating input:checked ~ label,
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: #fbbf24; /* Gold color */
+        }
+
+        .review-textarea {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            color: #fff;
+            margin-bottom: 1rem;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .review-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
         /* Action Buttons */
         .action-grid {
             display: grid;
@@ -377,6 +430,20 @@
                     </div>
                 </div>
 
+                <!-- Review Section -->
+                <div class="review-section" id="reviewSection">
+                    <label class="section-label">Rate Your Experience</label>
+                    <div class="star-rating">
+                        <input type="radio" id="star5" name="rating" value="5" /><label for="star5" title="5 stars"><i class="fas fa-star"></i></label>
+                        <input type="radio" id="star4" name="rating" value="4" /><label for="star4" title="4 stars"><i class="fas fa-star"></i></label>
+                        <input type="radio" id="star3" name="rating" value="3" /><label for="star3" title="3 stars"><i class="fas fa-star"></i></label>
+                        <input type="radio" id="star2" name="rating" value="2" /><label for="star2" title="2 stars"><i class="fas fa-star"></i></label>
+                        <input type="radio" id="star1" name="rating" value="1" /><label for="star1" title="1 star"><i class="fas fa-star"></i></label>
+                    </div>
+                    <textarea class="review-textarea" id="reviewText" placeholder="Write your feedback here (optional)..."></textarea>
+                    <button class="btn btn-primary" id="submitReviewBtn" onclick="submitReview()">Submit Review</button>
+                </div>
+
                 <div class="action-grid" id="actionButtons">
                     <!-- Buttons will be injected here -->
                 </div>
@@ -387,7 +454,7 @@
     <script type="module" src="config.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { firebaseConfig, WORKER_URL } from './config.js';
 
         const app = initializeApp(firebaseConfig);
@@ -402,6 +469,8 @@
             window.location.href = 'index.html';
         }
 
+        let currentOrderData = null;
+
         async function init() {
             document.getElementById('displayOrderId').textContent = `ID: #${orderId}`;
 
@@ -415,6 +484,7 @@
                 }
 
                 const orderData = orderSnap.data();
+                currentOrderData = orderData;
                 renderBasicInfo(orderData);
 
                 if (orderData.status === "PAID") {
@@ -478,6 +548,11 @@
             // Show accounts section
             document.getElementById('accountsSection').style.display = 'block';
 
+            // Show Review Section if not already reviewed
+            if (!currentOrderData || !currentOrderData.hasReviewed) {
+                document.getElementById('reviewSection').style.display = 'block';
+            }
+
             const listContainer = document.getElementById('accountsList');
             listContainer.innerHTML = '';
 
@@ -490,7 +565,7 @@
                     let contentHtml = '';
 
                     if (item.email) contentHtml += createFieldRow('Email', item.email);
-                    if(item.password) contentHtml += createFieldRow('Rockstar Pass', item.password);
+                    if(item.password) contentHtml += createFieldRow('Password', item.password);
                     if(item.emailpass) contentHtml += createFieldRow('Email Pass', item.emailpass);
                     if(item.webmail) contentHtml += createFieldRow('Webmail', item.webmail); // Added Webmail
                     if(item.license) contentHtml += createFieldRow('License Key', item.license);
@@ -535,6 +610,7 @@
             document.getElementById('statusTitle').textContent = "Waiting for Payment";
 
             document.getElementById('accountsSection').style.display = 'none';
+            document.getElementById('reviewSection').style.display = 'none';
 
             const btnContainer = document.getElementById('actionButtons');
             btnContainer.innerHTML = `
@@ -584,11 +660,65 @@
             });
         }
 
+        // --- REVIEW LOGIC ---
+        window.submitReview = async function() {
+            const ratingInput = document.querySelector('input[name="rating"]:checked');
+            const reviewText = document.getElementById('reviewText').value;
+            const btn = document.getElementById('submitReviewBtn');
+
+            if (!ratingInput) {
+                alert("Please select a star rating.");
+                return;
+            }
+
+            const rating = ratingInput.value;
+            btn.textContent = "Submitting...";
+            btn.disabled = true;
+
+            try {
+                // 1. Send to Google Sheets (via App Script Web App)
+                // REPLACE THIS URL WITH YOUR ACTUAL GOOGLE APPS SCRIPT WEB APP URL
+                const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx_YOUR_SCRIPT_ID_HERE/exec";
+
+                // Construct payload
+                const payload = {
+                    orderId: orderId,
+                    productName: currentOrderData.productName,
+                    variantName: currentOrderData.variantName || "-",
+                    rating: rating,
+                    review: reviewText,
+                    customerName: currentOrderData.customerName || "Anonymous",
+                    date: new Date().toISOString()
+                };
+
+                // Since we can't easily do CORS POST to Google Script from client-side without issues sometimes,
+                // we often use no-cors or a proxy. For simplicity in this tutorial context, we'll assume standard fetch.
+                // Note: 'no-cors' means we won't get a readable response, but the request is sent.
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                // 2. Update Firestore to mark as reviewed (prevent duplicate reviews)
+                const orderRef = doc(db, "orders", orderId);
+                await updateDoc(orderRef, { hasReviewed: true });
+
+                alert("Thank you for your feedback!");
+                document.getElementById('reviewSection').style.display = 'none';
+
+            } catch (error) {
+                console.error("Review Error:", error);
+                alert("Failed to submit review. Please try again.");
+                btn.textContent = "Submit Review";
+                btn.disabled = false;
+            }
+        }
+
         // Start
         init();
 
     </script>
 </body>
 </html>
-
-
