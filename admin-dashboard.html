@@ -921,6 +921,13 @@
                     stockFormHtml = `
                         <textarea class="form-control mb-2" id="desc-${variant.id}" placeholder="Description" rows="3"></textarea>
                     `;
+                } else if (stockType === '2fa') {
+                    stockFormHtml = `
+                        <input type="text" class="form-control mb-2" id="email-${variant.id}" placeholder="Email">
+                        <input type="text" class="form-control mb-2" id="pass-${variant.id}" placeholder="Rockstar Password">
+                        <input type="text" class="form-control mb-2" id="2fa-${variant.id}" placeholder="2FA Code">
+                        <input type="text" class="form-control mb-2" id="note-${variant.id}" placeholder="Note (Tutorial)">
+                    `;
                 }
 
                 card.innerHTML = `
@@ -961,6 +968,7 @@
                                     <option value="fivem" ${stockType === 'fivem' ? 'selected' : ''}>Akun Fivem</option>
                                     <option value="license" ${stockType === 'license' ? 'selected' : ''}>License Code</option>
                                     <option value="description" ${stockType === 'description' ? 'selected' : ''}>Description Only</option>
+                                    <option value="2fa" ${stockType === '2fa' ? 'selected' : ''}>2FA Account</option>
                                 </select>
                             </div>
 
@@ -991,6 +999,9 @@
                                     if(acc.note) displayText += ` | ${acc.note}`;
                                 } else if (stockType === 'description') {
                                     displayText = acc.description ? acc.description.substring(0, 30) + '...' : 'No Desc';
+                                } else if (stockType === '2fa') {
+                                    displayText = `${acc.email} | ${acc.password} | ${acc.twofa}`;
+                                    if(acc.note) displayText += ` | ${acc.note}`;
                                 }
                                 return `
                                 <div class="stock-item ${acc.isSold ? 'sold' : ''}">
@@ -1025,6 +1036,11 @@
                 document.getElementById(`note-${variant.id}`).value = account.note || '';
             } else if (stockType === 'description') {
                 document.getElementById(`desc-${variant.id}`).value = account.description || '';
+            } else if (stockType === '2fa') {
+                document.getElementById(`email-${variant.id}`).value = account.email || '';
+                document.getElementById(`pass-${variant.id}`).value = account.password || '';
+                document.getElementById(`2fa-${variant.id}`).value = account.twofa || '';
+                document.getElementById(`note-${variant.id}`).value = account.note || '';
             }
 
             // Change button to Update
@@ -1091,6 +1107,15 @@
                 if(!desc) return alert("Description is required");
 
                 account.description = desc;
+            } else if (stockType === '2fa') {
+                const email = document.getElementById(`email-${variant.id}`).value;
+                const pass = document.getElementById(`pass-${variant.id}`).value;
+                if(!email || !pass) return alert("Email and Rockstar Password are required");
+
+                account.email = email;
+                account.password = pass;
+                account.twofa = document.getElementById(`2fa-${variant.id}`).value;
+                account.note = document.getElementById(`note-${variant.id}`).value;
             }
 
             renderVariantCards();
@@ -1195,6 +1220,24 @@
 
                 // Clear inputs
                 document.getElementById(`desc-${variant.id}`).value = '';
+            } else if (stockType === '2fa') {
+                const email = document.getElementById(`email-${variant.id}`).value;
+                const pass = document.getElementById(`pass-${variant.id}`).value;
+                const twofa = document.getElementById(`2fa-${variant.id}`).value;
+                const note = document.getElementById(`note-${variant.id}`).value;
+
+                if(!email || !pass) return alert("Email and Rockstar Password are required");
+
+                newAccount.email = email;
+                newAccount.password = pass;
+                newAccount.twofa = twofa;
+                newAccount.note = note;
+
+                // Clear inputs
+                document.getElementById(`email-${variant.id}`).value = '';
+                document.getElementById(`pass-${variant.id}`).value = '';
+                document.getElementById(`2fa-${variant.id}`).value = '';
+                document.getElementById(`note-${variant.id}`).value = '';
             }
 
             variant.accounts.push(newAccount);
