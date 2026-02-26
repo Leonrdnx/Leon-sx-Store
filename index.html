@@ -718,6 +718,30 @@
             border-color: var(--primary);
         }
 
+        /* Sold Count Badge on Card */
+        .card-sold-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            z-index: 10;
+        }
+
+        .card-sold-badge i {
+            color: var(--accent);
+            font-size: 0.7rem;
+        }
+
         /* Payment Methods Section */
         .payment-section {
             padding: 4rem 5%;
@@ -1367,9 +1391,9 @@
                 <div class="footer-copyright">&copy; 2026 • All rights reserved.</div>
             </div>
             <div class="footer-right">
-                <a href="https://discord.gg/8Ew7rctZSM" class="social-link"><i class="fab fa-discord"></i></a>
-                <a href="https://www.instagram.com/leonrdnx/" class="social-link"><i class="fab fa-instagram"></i></a>
-                <a href="https://www.tiktok.com/@leonrdnxx" class="social-link"><i class="fab fa-tiktok"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-discord"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-tiktok"></i></a>
             </div>
         </div>
     </footer>
@@ -1411,7 +1435,7 @@
 
                         const prices = data.variants.map(v => v.price || data.price);
                         const minPrice = Math.min(...prices);
-                        priceDisplay = `From ${formatRupiah(minPrice)}`;
+                        priceDisplay = `${formatRupiah(minPrice)}`;
                     } else {
                         totalStock = data.stock || 0;
                         priceDisplay = formatRupiah(data.price);
@@ -1426,11 +1450,22 @@
                         ? `<img src="${data.imageUrl}" alt="${data.name}">`
                         : `<span>IMG</span>`;
 
+                    // Sold Count Badge
+                    let soldBadgeHtml = '';
+                    if (data.soldCount && data.soldCount > 0) {
+                        soldBadgeHtml = `
+                            <div class="card-sold-badge">
+                                <i class="fas fa-fire"></i> ${data.soldCount} Sold
+                            </div>
+                        `;
+                    }
+
                     const card = document.createElement('div');
                     card.className = 'product-card reveal'; // Add reveal class for animation
                     card.onclick = () => window.location.href = `detail-prod.html?id=${productId}`;
 
                     card.innerHTML = `
+                        ${soldBadgeHtml}
                         <div class="card-banner">
                             ${bannerContent}
                         </div>
@@ -1617,4 +1652,3 @@
     <!--End of Tawk.to Script-->
 </body>
 </html>
-
