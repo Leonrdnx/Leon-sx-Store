@@ -738,6 +738,11 @@
                     <textarea id="prodDesc" class="form-control" rows="2"></textarea>
                 </div>
 
+                <div class="form-group">
+                    <label>Sold Count (Manual Override)</label>
+                    <input type="number" id="prodSoldCount" class="form-control" placeholder="0">
+                </div>
+
                 <div class="section-divider"></div>
 
                 <!-- 2. Manage Variants -->
@@ -1283,6 +1288,7 @@
                 const basePrice = Number(document.getElementById('prodPrice').value);
                 const originalPrice = document.getElementById('prodOriginalPrice').value ? Number(document.getElementById('prodOriginalPrice').value) : null;
                 const desc = document.getElementById('prodDesc').value;
+                const soldCount = document.getElementById('prodSoldCount').value ? Number(document.getElementById('prodSoldCount').value) : 0;
 
                 const publicVariants = variantsState.map(v => ({
                     id: v.id,
@@ -1304,6 +1310,7 @@
                     hasVariants: variantsState.length > 0,
                     variants: publicVariants,
                     stock: totalStock,
+                    soldCount: soldCount, // Save sold count
                     updatedAt: new Date()
                 };
 
@@ -1370,6 +1377,7 @@
                         document.getElementById('prodOriginalPrice').value = data.originalPrice;
                     }
                     document.getElementById('prodDesc').value = data.description;
+                    document.getElementById('prodSoldCount').value = data.soldCount || 0;
 
                     if (data.imageUrl) {
                         document.getElementById('prodImageUrl').value = data.imageUrl;
