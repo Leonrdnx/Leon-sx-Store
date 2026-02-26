@@ -284,6 +284,24 @@
             box-shadow: 0 0 8px #ef4444;
         }
 
+        /* Sold Count Badge */
+        .sold-count-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .sold-count-badge i {
+            color: var(--accent);
+        }
+
         /* Variants */
         .variant-section {
             margin: 0.5rem 0;
@@ -547,6 +565,9 @@
                     <div class="price-container">
                         <div class="original-price" id="originalPriceTag" style="display: none;">Rp 0</div>
                         <div class="price-tag" id="priceTag">Rp 0</div>
+                        <div class="sold-count-badge" id="soldCountBadge" style="display: none;">
+                            <i class="fas fa-fire"></i> <span id="soldCountText">0 Sold</span>
+                        </div>
                     </div>
                     <div class="stock-status" id="stockDisplay">
                         <span class="stock-dot"></span>
@@ -617,7 +638,7 @@
     <script type="module" src="config.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { firebaseConfig, WORKER_URL } from './config.js';
 
         const app = initializeApp(firebaseConfig);
@@ -641,14 +662,16 @@
         async function loadProduct() {
             try {
                 const docRef = doc(db, "products", productId);
-                const docSnap = await getDoc(docRef);
 
-                if (docSnap.exists()) {
-                    currentProduct = docSnap.data();
-                    renderProduct();
-                } else {
-                    document.getElementById('prodTitle').textContent = "Product not found";
-                }
+                // Use onSnapshot for realtime updates
+                onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        currentProduct = docSnap.data();
+                        renderProduct();
+                    } else {
+                        document.getElementById('prodTitle').textContent = "Product not found";
+                    }
+                });
             } catch (error) {
                 console.error("Error:", error);
             }
@@ -667,9 +690,24 @@
                 imgContainer.innerHTML = `<span>IMG</span>`;
             }
 
+            // Render Sold Count
+            const soldCount = currentProduct.soldCount || 0;
+            const soldBadge = document.getElementById('soldCountBadge');
+            const soldText = document.getElementById('soldCountText');
+
+            if (soldCount > 0) {
+                soldText.textContent = `${soldCount} Sold`;
+                soldBadge.style.display = 'inline-flex';
+            } else {
+                soldBadge.style.display = 'none';
+            }
+
             if (currentProduct.hasVariants && currentProduct.variants && currentProduct.variants.length > 0) {
                 document.getElementById('variantSection').style.display = 'block';
                 const container = document.getElementById('variantOptions');
+
+                // Only re-render buttons if they don't exist or count changed (to avoid losing active state if possible, though simple re-render is safer for data consistency)
+                // For simplicity, we re-render but try to keep selection
                 container.innerHTML = '';
 
                 currentProduct.variants.forEach((v, index) => {
@@ -677,10 +715,18 @@
                     btn.className = 'variant-btn';
                     btn.textContent = v.name;
                     btn.onclick = () => selectVariant(index);
+                    if (index === currentVariantIndex) {
+                        btn.classList.add('active');
+                    }
                     container.appendChild(btn);
                 });
 
-                selectVariant(0);
+                if (currentVariantIndex === -1) {
+                    selectVariant(0);
+                } else {
+                    // Re-select to update stock/price info from new data
+                    selectVariant(currentVariantIndex);
+                }
             } else {
                 document.getElementById('variantSection').style.display = 'none';
                 currentVariantIndex = -1;
@@ -694,7 +740,7 @@
         window.selectVariant = function(index) {
             const btns = document.querySelectorAll('.variant-btn');
             btns.forEach(b => b.classList.remove('active'));
-            btns[index].classList.add('active');
+            if(btns[index]) btns[index].classList.add('active');
 
             currentVariantIndex = index;
             const v = currentProduct.variants[index];
