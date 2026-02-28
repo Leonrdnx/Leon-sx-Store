@@ -290,6 +290,41 @@
             color: var(--text-muted);
         }
 
+        /* Skeleton Loading */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .skeleton-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .skeleton-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .skeleton-text {
+            height: 12px;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-text.short { width: 40%; }
+        .skeleton-text.medium { width: 70%; }
+        .skeleton-text.long { width: 100%; }
+
         /* Footer */
         footer {
             border-top: 1px solid var(--border-color);
@@ -408,10 +443,7 @@
 
     <section class="reviews-container">
         <div class="reviews-grid" id="reviewsGrid">
-            <div class="loading-container">
-                <i class="fas fa-circle-notch fa-spin fa-2x"></i>
-                <p style="margin-top: 1rem;">Loading reviews...</p>
-            </div>
+            <!-- Skeleton Loading will be injected here -->
         </div>
     </section>
 
@@ -433,8 +465,36 @@
         // REPLACE THIS URL WITH YOUR ACTUAL GOOGLE APPS SCRIPT WEB APP URL
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxsUZQU_ZEKi2AEwTPRlMd0vY2ZaPSjy4wcEpGsam8FS8vFQuQX6vGVoW6mI296XMTQ/exec";
 
+        function showSkeleton() {
+            const grid = document.getElementById('reviewsGrid');
+            grid.innerHTML = '';
+            // Create 6 skeleton cards
+            for (let i = 0; i < 6; i++) {
+                const card = document.createElement('div');
+                card.className = 'skeleton-card';
+                card.innerHTML = `
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="skeleton skeleton-avatar"></div>
+                            <div style="flex: 1;">
+                                <div class="skeleton skeleton-text short"></div>
+                                <div class="skeleton skeleton-text short" style="width: 30%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="skeleton skeleton-text short" style="margin-bottom: 1rem;"></div>
+                    <div class="skeleton skeleton-text short" style="width: 20%; margin-bottom: 1rem;"></div>
+                    <div class="skeleton skeleton-text long"></div>
+                    <div class="skeleton skeleton-text long"></div>
+                    <div class="skeleton skeleton-text medium"></div>
+                `;
+                grid.appendChild(card);
+            }
+        }
+
         async function loadReviews() {
             const grid = document.getElementById('reviewsGrid');
+            showSkeleton(); // Show skeleton before fetching
 
             try {
                 // Added redirect: 'follow' to handle Google's 302 redirects
@@ -450,7 +510,7 @@
                 const result = await response.json();
 
                 if (result.status === 'success' && result.data) {
-                    grid.innerHTML = ''; // Clear loading
+                    grid.innerHTML = ''; // Clear skeleton
 
                     // Reverse to show newest first
                     const reviews = result.data.reverse();
