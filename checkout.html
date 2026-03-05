@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Leon'sx Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --card-bg: #0f0f11;
+            --primary: #8b5cf6;
+            --accent: #d946ef;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-attachment: fixed;
+        }
+
+        /* --- SNOW CANVAS --- */
+        #snowCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Nav */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 5%;
+            background: rgba(5, 5, 5, 0.6);
+            backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #fff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Main Container */
+        .checkout-container {
+            max-width: 1000px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .checkout-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        /* Cards */
+        .checkout-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Order Summary */
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .summary-item.total {
+            border-top: 1px solid var(--border-color);
+            padding-top: 1rem;
+            margin-top: 1rem;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .product-preview {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .product-img {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            object-fit: cover;
+        }
+
+        .product-details h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .product-details p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Customer Data */
+        .customer-data-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .data-row {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .data-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+
+        .data-value {
+            font-size: 1rem;
+            color: #fff;
+            font-weight: 500;
+            background: rgba(255,255,255,0.03);
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Payment Methods */
+        .payment-methods-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .payment-method-item {
+            background: rgba(255,255,255,0.05); /* Slightly lighter background */
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 60px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy transition */
+            position: relative;
+            overflow: hidden;
+        }
+
+        .payment-method-item img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            /* Removed grayscale filter to show original colors */
+            transition: transform 0.3s ease;
+        }
+
+        .payment-method-item:hover {
+            border-color: var(--primary);
+            background: rgba(139, 92, 246, 0.15); /* Highlight background */
+            transform: translateY(-5px); /* Lift effect */
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.2); /* Glow shadow */
+        }
+
+        .payment-method-item:hover img {
+            transform: scale(1.1); /* Slight zoom on logo */
+        }
+
+        /* Checkout Button */
+        .btn-checkout {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+            margin-top: 2rem;
+        }
+
+        .btn-checkout:hover {
+            background: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(217, 70, 239, 0.4);
+        }
+
+        .btn-checkout:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .secure-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: #10b981;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Snow Canvas -->
+    <canvas id="snowCanvas"></canvas>
+
+    <nav>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="image.png" alt="Logo" style="width: 40px; height: 40px; object-fit: contain; border-radius: 8px;">
+            <div class="logo">Leon'sx Store</div>
+        </div>
+    </nav>
+
+    <div class="checkout-container">
+        <!-- Left Side: Customer Data & Payment Info -->
+        <div class="left-section">
+            <div class="checkout-card">
+                <h2 class="section-title">Customer Information</h2>
+                <div class="customer-data-grid">
+                    <div class="data-row">
+                        <span class="data-label">Full Name</span>
+                        <div class="data-value" id="dispName">Loading...</div>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Email Address</span>
+                        <div class="data-value" id="dispEmail">Loading...</div>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Phone Number (WhatsApp)</span>
+                        <div class="data-value" id="dispPhone">Loading...</div>
+                    </div>
+                    <div class="data-row" id="couponRow" style="display: none;">
+                        <span class="data-label">Coupon Code</span>
+                        <div class="data-value" id="dispCoupon">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkout-card">
+                <h2 class="section-title">Payment Methods</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">Supported payments via Mayar:</p>
+                <div class="payment-methods-grid">
+                    <div class="payment-method-item" title="QRIS"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Logo_QRIS.svg/1200px-Logo_QRIS.svg.png" alt="QRIS"></div>
+                    <div class="payment-method-item" title="GoPay"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Gopay_logo.svg/2560px-Gopay_logo.svg.png" alt="GoPay"></div>
+                    <div class="payment-method-item" title="OVO"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Logo_ovo_purple.svg/2560px-Logo_ovo_purple.svg.png" alt="OVO"></div>
+                    <div class="payment-method-item" title="DANA"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Logo_dana_blue.svg/2560px-Logo_dana_blue.svg.png" alt="DANA"></div>
+                    <div class="payment-method-item" title="ShopeePay"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Shopee.svg/2560px-Shopee.svg.png" alt="ShopeePay"></div>
+                    <div class="payment-method-item" title="LinkAja"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/LinkAja.svg/2048px-LinkAja.svg.png" alt="LinkAja"></div>
+                    <div class="payment-method-item" title="Bank Transfer"><img src="https://www.svgrepo.com/show/496837/bank.svg" alt="Bank"></div>
+                    <div class="payment-method-item" title="Indomaret"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Logo_Indomaret.png/1200px-Logo_Indomaret.png" alt="Indomaret"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Order Summary -->
+        <div class="right-section">
+            <div class="checkout-card" style="position: sticky; top: 100px;">
+                <h2 class="section-title">Order Summary</h2>
+
+                <div class="product-preview">
+                    <img src="" alt="Product" class="product-img" id="prodImg">
+                    <div class="product-details">
+                        <h4 id="prodName">Product Name</h4>
+                        <p id="varName">Variant: -</p>
+                    </div>
+                </div>
+
+                <div class="summary-item">
+                    <span>Price</span>
+                    <span id="summPrice">Rp 0</span>
+                </div>
+                <div class="summary-item">
+                    <span>Quantity</span>
+                    <span id="summQty">x1</span>
+                </div>
+                <div class="summary-item total">
+                    <span>Total</span>
+                    <span id="summTotal" style="color: var(--accent);">Rp 0</span>
+                </div>
+
+                <button class="btn-checkout" id="processPaymentBtn" onclick="processPayment()">
+                    <i class="fas fa-lock"></i> Pay Now
+                </button>
+
+                <div class="secure-badge">
+                    <i class="fas fa-shield-alt"></i> 100% Secure Payment
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="config.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { firebaseConfig, WORKER_URL } from './config.js';
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Load Data from LocalStorage
+        const orderData = JSON.parse(localStorage.getItem('pendingOrder'));
+
+        if (!orderData) {
+            alert("No order data found. Redirecting to home.");
+            window.location.href = 'index.html';
+        }
+
+        // Display Data
+        document.getElementById('dispName').textContent = orderData.customerName;
+        document.getElementById('dispEmail').textContent = orderData.customerEmail;
+        document.getElementById('dispPhone').textContent = orderData.customerPhone;
+
+        if (orderData.coupon) {
+            document.getElementById('couponRow').style.display = 'flex';
+            document.getElementById('dispCoupon').textContent = orderData.coupon;
+        }
+
+        document.getElementById('prodName').textContent = orderData.productName;
+        document.getElementById('varName').textContent = `Variant: ${orderData.variantName}`;
+        document.getElementById('summPrice').textContent = formatRupiah(orderData.pricePerUnit);
+        document.getElementById('summQty').textContent = `x${orderData.quantity}`;
+        document.getElementById('summTotal').textContent = formatRupiah(orderData.totalAmount);
+
+        const imgEl = document.getElementById('prodImg');
+        if (orderData.productImage) {
+            imgEl.src = orderData.productImage;
+        } else {
+            imgEl.style.display = 'none';
+        }
+
+        function formatRupiah(num) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
+        }
+
+        // Process Payment
+        window.processPayment = async function() {
+            const btn = document.getElementById('processPaymentBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            btn.disabled = true;
+
+            try {
+                // 1. Request Payment Link from Worker
+                const targetUrl = `${WORKER_URL}/api/create-transaction`;
+
+                const response = await fetch(targetUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: orderData.totalAmount,
+                        description: `Order: ${orderData.productName} (${orderData.variantName})`,
+                        customerName: orderData.customerName,
+                        customerEmail: orderData.customerEmail,
+                        customerPhone: orderData.customerPhone
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.link && result.orderId) {
+                    // 2. SAVE ORDER TO FIRESTORE
+                    const orderId = result.orderId;
+                    const invoiceId = result.invoiceId;
+
+                    await setDoc(doc(db, "orders", orderId), {
+                        orderId: orderId,
+                        invoiceId: invoiceId,
+                        productId: orderData.productId,
+                        productName: orderData.productName,
+                        variantIndex: orderData.variantIndex,
+                        variantName: orderData.variantName,
+                        quantity: orderData.quantity,
+                        totalAmount: orderData.totalAmount,
+                        customerName: orderData.customerName,
+                        customerEmail: orderData.customerEmail,
+                        customerPhone: orderData.customerPhone,
+                        coupon: orderData.coupon || null,
+                        status: "UNPAID",
+                        paymentLink: result.link,
+                        createdAt: serverTimestamp(),
+                        deliveredItems: []
+                    });
+
+                    // Clear local storage
+                    localStorage.removeItem('pendingOrder');
+
+                    // 3. Redirect
+                    window.location.href = result.link;
+                } else {
+                    throw new Error(result.error || "Failed to create transaction");
+                }
+
+            } catch (error) {
+                console.error("Payment Error:", error);
+                alert("Payment failed: " + error.message);
+                btn.innerHTML = '<i class="fas fa-lock"></i> Pay Now';
+                btn.disabled = false;
+            }
+        }
+
+        // --- SNOW EFFECT SCRIPT ---
+        const canvas = document.getElementById('snowCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.radius = Math.random() * 2 + 0.5;
+                this.speed = Math.random() * 1 + 0.2;
+                this.opacity = Math.random() * 0.5 + 0.1;
+            }
+
+            update() {
+                this.y += this.speed;
+                if (this.y > height) {
+                    this.y = -10;
+                    this.x = Math.random() * width;
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const particleCount = Math.floor(width * 0.1);
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            resize();
+            initParticles();
+        });
+
+        resize();
+        initParticles();
+        animate();
+    </script>
+</body>
+</html>

@@ -45,6 +45,17 @@
             overflow-x: hidden;
         }
 
+        /* --- SNOW CANVAS --- */
+        #snowCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; /* Behind content (which is usually z-index 2) */
+            pointer-events: none; /* Allows clicking through the snow */
+        }
+
         /* --- SCROLL ANIMATIONS --- */
         .reveal {
             opacity: 0;
@@ -208,11 +219,12 @@
         }
 
         .blob-3 {
-            top: 40%;
+            top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
             width: 400px;
             height: 400px;
+            margin-left: -200px;
+            margin-top: -200px;
             background: #4c1d95;
             opacity: 0.4;
             animation-delay: 4s;
@@ -494,12 +506,86 @@
             font-weight: 600;
         }
 
+        /* --- NEW STATS SECTION --- */
+        .platform-stats {
+            padding: 0 5% 4rem;
+            position: relative;
+            z-index: 2;
+            margin-top: -2rem;
+        }
+
+        .platform-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .platform-stat-card {
+            background: linear-gradient(145deg, rgba(20, 20, 23, 0.9), rgba(15, 15, 17, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 1.5rem;
+            border-radius: 24px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .platform-stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at top, rgba(139, 92, 246, 0.1), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .platform-stat-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5),
+                        0 0 20px rgba(139, 92, 246, 0.1);
+        }
+
+        .platform-stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .platform-stat-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .platform-stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+
+        .platform-stat-label {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
         /* FEATURES SECTION */
         .features {
             padding: 0 5% 4rem;
             position: relative;
             z-index: 2;
-            margin-top: -2rem;
+            /* margin-top: -2rem; Removed negative margin to accommodate stats */
         }
 
         .features-grid {
@@ -509,14 +595,15 @@
         }
 
         .feature-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: linear-gradient(145deg, rgba(20, 20, 23, 0.9), rgba(15, 15, 17, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.08);
             padding: 2rem;
             border-radius: 24px;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
             overflow: hidden;
             backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .feature-card::before {
@@ -587,6 +674,60 @@
                 linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
             background-size: 30px 30px;
             scroll-margin-top: 100px;
+        }
+
+        /* --- NEW BACKGROUND FOR PRODUCTS SECTION --- */
+        .products-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .bg-shape {
+            position: absolute;
+            filter: blur(60px);
+            opacity: 0.15;
+            animation: float-slow 15s infinite ease-in-out;
+        }
+
+        .bg-shape-1 {
+            top: 10%;
+            left: -5%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, var(--primary), transparent);
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+            animation-delay: 0s;
+        }
+
+        .bg-shape-2 {
+            bottom: 20%;
+            right: -5%;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, var(--accent), transparent);
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            animation-delay: 5s;
+        }
+
+        .bg-line {
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.2), transparent);
+            top: 30%;
+            animation: scan 8s infinite linear;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(0); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(500px); opacity: 0; }
         }
 
         .products::before {
@@ -964,6 +1105,10 @@
             position: relative;
             overflow: hidden;
             backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .contact-card:hover {
@@ -990,12 +1135,15 @@
         }
 
         .contact-btn {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             padding: 0.8rem 2rem;
             border-radius: 50px;
             font-weight: 600;
             text-decoration: none;
             transition: all 0.3s ease;
+            gap: 0.5rem;
         }
 
         .discord-card .contact-icon { color: #5865F2; }
@@ -1043,6 +1191,7 @@
         .footer-right {
             display: flex;
             gap: 1rem;
+            margin-right: 2rem; /* Added margin-right for desktop */
         }
 
         .social-link {
@@ -1071,9 +1220,40 @@
         @media (max-width: 768px) {
             .hero h1 { font-size: 3rem; }
             .features-grid { grid-template-columns: 1fr; }
+
+            /* New styles for platform stats on mobile */
+            .platform-stats-grid {
+                grid-template-columns: repeat(3, 1fr); /* 3 columns in 1 row */
+                gap: 0.5rem; /* Smaller gap */
+            }
+
+            .platform-stat-card {
+                padding: 0.8rem; /* Even smaller padding */
+                border-radius: 16px; /* Slightly smaller radius */
+            }
+
+            .platform-stat-icon {
+                font-size: 1.5rem; /* Smaller icon */
+                margin-bottom: 0.5rem;
+            }
+
+            .platform-stat-number {
+                font-size: 1.5rem; /* Smaller number */
+                margin-bottom: 0.2rem;
+            }
+
+            .platform-stat-label {
+                font-size: 0.7rem; /* Smaller label */
+                line-height: 1.2;
+            }
+
             .footer-content {
                 flex-direction: column;
                 text-align: center;
+            }
+
+            .footer-right {
+                margin-right: 0; /* Reset margin for mobile */
             }
 
             /* Mobile Menu Styles */
@@ -1109,6 +1289,9 @@
     </style>
 </head>
 <body>
+
+    <!-- Snow Canvas -->
+    <canvas id="snowCanvas"></canvas>
 
     <nav>
         <div style="display: flex; align-items: center; gap: 10px;">
@@ -1170,24 +1353,43 @@
         <div class="deco-element deco-ring"></div>
 
         <div class="hero-badge">✨ Premium Digital Assets</div>
-        <h1>Trusted Marketplace<br>for Digital Accounts</h1>
+        <h1>Elevate Your Digital<br>Experience Today</h1>
         <p>Instant delivery, secure payments, and 24/7 support. The best marketplace for your digital needs.</p>
-        
-        <div class="stats">
-            <div class="stat-item">
-                <h3>Instant</h3>
-                <span>No Waiting</span>
+
+        <!-- Removed old stats from here -->
+    </header>
+
+    <!-- STATISTIK PLATFORM SECTION -->
+    <section class="platform-stats">
+        <div class="platform-stats-grid">
+            <!-- Card 1: Total Produk Terjual -->
+            <div class="platform-stat-card reveal">
+                <div class="platform-stat-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="platform-stat-number counter" id="stat-sold" data-target="0">0</div>
+                <div class="platform-stat-label">Total Produk Terjual</div>
             </div>
-            <div class="stat-item">
-                <h3>Reliable</h3>
-                <span>Always Works</span>
+
+            <!-- Card 2: Rating -->
+            <div class="platform-stat-card reveal delay-100">
+                <div class="platform-stat-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="platform-stat-number counter" id="stat-rating" data-target="0">0</div>
+                <div class="platform-stat-label">Average Rating</div>
             </div>
-            <div class="stat-item">
-                <h3>Private</h3>
-                <span>Full Access</span>
+
+            <!-- Card 3: Total Buyer -->
+            <div class="platform-stat-card reveal delay-200">
+                <div class="platform-stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="platform-stat-number counter" id="stat-buyer" data-target="0">0</div>
+                <div class="platform-stat-label">Total Buyer</div>
             </div>
         </div>
-    </header>
+    </section>
 
     <!-- FEATURES SECTION -->
     <section class="features">
@@ -1224,10 +1426,17 @@
     </section>
 
     <main class="products" id="products">
+        <!-- New Background Elements for Products Section -->
+        <div class="products-background">
+            <div class="bg-shape bg-shape-1"></div>
+            <div class="bg-shape bg-shape-2"></div>
+            <div class="bg-line"></div>
+        </div>
+
         <div class="section-header reveal">
             <h2 class="section-title">Latest Products</h2>
         </div>
-        
+
         <div class="product-grid" id="productGrid">
             <!-- Products will be loaded here dynamically -->
             <div style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Loading products...</div>
@@ -1327,7 +1536,7 @@
     <!-- FAQ SECTION -->
     <section class="faq-section" id="faq">
         <div class="section-header reveal" style="justify-content: center; text-align: center;">
-            <h2 class="section-title">Pertanyaan yang sering di tanyakan</h2>
+            <h2 class="section-title">Frequently Asked Questions</h2>
         </div>
         <div class="faq-container">
             <div class="faq-item reveal">
@@ -1412,11 +1621,15 @@
     <script type="module" src="config.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { firebaseConfig, WORKER_URL } from './config.js';
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        // --- CONFIGURATION FOR STATS ---
+        const STATIC_BUYERS = 5230; // Angka statis untuk Total Buyer
+        const REVIEWS_API_URL = "https://script.google.com/macros/s/AKfycbxIpNGDSh33lJtFDChiUXczdpU_xqbZ5mGhILqIenHO_VijX1ttreIiuzBdx49XhVJ5/exec";
 
         // --- Product Logic (Realtime) ---
         function loadProducts() {
@@ -1426,15 +1639,23 @@
             // Use onSnapshot for realtime updates
             const unsubscribe = onSnapshot(q, (querySnapshot) => {
                 grid.innerHTML = "";
+                let totalPlatformSold = 0; // Variable to sum up all sold counts
 
                 if (querySnapshot.empty) {
                     grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No products available yet.</div>`;
+                    // Even if empty, update stats to 0
+                    updateStatElement('stat-sold', 0, "+");
                     return;
                 }
 
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     const productId = doc.id;
+
+                    // Sum up sold count for stats
+                    if (data.soldCount) {
+                        totalPlatformSold += data.soldCount;
+                    }
 
                     let priceDisplay = "";
                     let totalStock = 0;
@@ -1498,17 +1719,73 @@
                         observer.observe(card);
                     }
                 });
+
+                // Update the "Total Produk Terjual" stat
+                updateStatElement('stat-sold', totalPlatformSold, "+");
+
             }, (error) => {
                 console.error("Error loading products:", error);
                 grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #ef4444;">Failed to load products.</div>`;
             });
         }
 
+        // --- Stats Logic ---
+        async function initStats() {
+            // 1. Set Total Buyers from Firestore
+            try {
+                const docRef = doc(db, "settings", "landing_page");
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists() && docSnap.data().totalBuyers) {
+                    updateStatElement('stat-buyer', docSnap.data().totalBuyers, "+");
+                } else {
+                    updateStatElement('stat-buyer', STATIC_BUYERS, "+");
+                }
+            } catch (error) {
+                console.error("Error loading total buyers:", error);
+                updateStatElement('stat-buyer', STATIC_BUYERS, "+");
+            }
+
+            // 2. Fetch Rating
+            fetch(REVIEWS_API_URL, { method: 'GET', redirect: 'follow' })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success' && result.data && result.data.length > 0) {
+                        const ratings = result.data.map(r => r.rating);
+                        const sum = ratings.reduce((a, b) => a + b, 0);
+                        const avg = (sum / ratings.length).toFixed(1);
+                        updateStatElement('stat-rating', avg, "/5");
+                    } else {
+                        updateStatElement('stat-rating', 5.0, "/5"); // Default if no reviews
+                    }
+                })
+                .catch(err => {
+                    console.error("Error fetching ratings:", err);
+                    updateStatElement('stat-rating', 5.0, "/5"); // Fallback
+                });
+        }
+
+        function updateStatElement(id, value, suffix = "") {
+            const el = document.getElementById(id);
+            if (el) {
+                el.setAttribute('data-target', value);
+                el.setAttribute('data-suffix', suffix);
+                // If the element is already visible (observer triggered), we might need to restart animation
+                // But usually, data loads before scroll or during.
+                // If user is already looking at it, the observer won't re-trigger.
+                // Simple fix: check if it has 'active' class, if so, animate now.
+                if (el.closest('.reveal').classList.contains('active')) {
+                    animateCounter(el);
+                }
+            }
+        }
+
         function formatRupiah(num) {
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
         }
 
+        // Initialize
         loadProducts();
+        initStats();
     </script>
     <script>
         const menuBtn = document.querySelector('.menu-btn');
@@ -1628,6 +1905,33 @@
             });
         });
 
+        // --- COUNTER ANIMATION LOGIC ---
+        function animateCounter(el) {
+            const target = +el.getAttribute('data-target');
+            const suffix = el.getAttribute('data-suffix') || "";
+            const duration = 2000; // 2 seconds
+            const increment = target / (duration / 16); // 60fps
+
+            let current = 0;
+
+            const updateCounter = () => {
+                current += increment;
+                if (current < target) {
+                    // Check if it's a float (like rating) or int
+                    if (target % 1 !== 0) {
+                        el.innerText = current.toFixed(1) + suffix;
+                    } else {
+                        el.innerText = Math.ceil(current) + suffix;
+                    }
+                    requestAnimationFrame(updateCounter);
+                } else {
+                    el.innerText = target + suffix;
+                }
+            };
+
+            updateCounter();
+        }
+
         // --- SCROLL ANIMATION OBSERVER ---
         const observerOptions = {
             threshold: 0.15,
@@ -1638,6 +1942,16 @@
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('active');
+
+                    // Check if this revealed element contains a counter
+                    const counters = entry.target.querySelectorAll('.counter');
+                    counters.forEach(counter => {
+                        // Only animate if not already animated (optional check, but good for performance)
+                        if (counter.innerText === "0" || counter.innerText === "0.0") {
+                             animateCounter(counter);
+                        }
+                    });
+
                     observer.unobserve(entry.target); // Only animate once
                 }
             });
@@ -1647,6 +1961,69 @@
         document.querySelectorAll('.reveal').forEach(el => {
             observer.observe(el);
         });
+
+        // --- SNOW EFFECT SCRIPT ---
+        const canvas = document.getElementById('snowCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.radius = Math.random() * 2 + 0.5; // Size between 0.5 and 2.5
+                this.speed = Math.random() * 1 + 0.2; // Speed between 0.2 and 1.2
+                this.opacity = Math.random() * 0.5 + 0.1; // Opacity between 0.1 and 0.6
+            }
+
+            update() {
+                this.y += this.speed;
+                if (this.y > height) {
+                    this.y = -10;
+                    this.x = Math.random() * width;
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const particleCount = Math.floor(width * 0.1); // Adjust density based on screen width
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            resize();
+            initParticles();
+        });
+
+        resize();
+        initParticles();
+        animate();
     </script>
     <!--Start of Tawk.to Script-->
     <script type="text/javascript">
@@ -1663,4 +2040,3 @@
     <!--End of Tawk.to Script-->
 </body>
 </html>
-

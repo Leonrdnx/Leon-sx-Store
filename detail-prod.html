@@ -30,12 +30,88 @@
             color: var(--text-main);
             line-height: 1.6;
             min-height: 100vh;
+            overflow-x: hidden;
             /* Grid Pattern Background */
             background-image:
                 linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
             background-size: 40px 40px;
             background-attachment: fixed;
+        }
+
+        /* --- SNOW CANVAS --- */
+        #snowCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0; /* Behind content but above background */
+            pointer-events: none; /* Allows clicking through the snow */
+        }
+
+        /* --- BACKGROUND EFFECTS --- */
+        .background-effects {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 10s infinite ease-in-out;
+        }
+
+        .blob-1 {
+            top: -10%;
+            left: -10%;
+            width: 500px;
+            height: 500px;
+            background: var(--primary);
+            animation-delay: 0s;
+        }
+
+        .blob-2 {
+            bottom: -10%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: var(--accent);
+            animation-delay: 2s;
+        }
+
+        .blob-3 {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: #4c1d95;
+            opacity: 0.2;
+            animation-name: float-center;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+
+        @keyframes float-center {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            33% { transform: translate(-45%, -55%) scale(1.1); }
+            66% { transform: translate(-55%, -45%) scale(0.9); }
+            100% { transform: translate(-50%, -50%) scale(1); }
         }
 
         /* Nav */
@@ -109,11 +185,34 @@
             cursor: pointer;
         }
 
+        .login-btn {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .login-btn:hover {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+        }
+
         /* Main Layout */
         .main-wrapper {
             max-width: 1200px;
             margin: 2rem auto;
             padding: 0 1rem;
+            position: relative;
+            z-index: 1;
         }
 
         .product-layout {
@@ -161,6 +260,7 @@
             background: rgba(255,255,255,0.02);
             border-radius: 20px;
             border: 1px solid var(--border-color);
+            backdrop-filter: blur(5px);
         }
 
         .product-image-container img {
@@ -333,6 +433,7 @@
             transition: all 0.3s;
             font-weight: 500;
             font-family: 'Outfit', sans-serif;
+            backdrop-filter: blur(5px);
         }
 
         .variant-btn:hover {
@@ -367,6 +468,7 @@
             background: rgba(255,255,255,0.03);
             border-radius: 8px;
             border: 1px solid var(--border-color);
+            backdrop-filter: blur(5px);
         }
 
         .qty-btn {
@@ -405,11 +507,12 @@
 
         /* Customer Form */
         .customer-form {
-            background: var(--card-bg);
+            background: rgba(15, 15, 17, 0.6);
             padding: 1.5rem;
             border-radius: 16px;
             border: 1px solid var(--border-color);
             margin-top: 1rem;
+            backdrop-filter: blur(10px);
         }
 
         .form-title {
@@ -522,6 +625,16 @@
 </head>
 <body>
 
+    <!-- Background Effects -->
+    <div class="background-effects">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- Snow Canvas -->
+    <canvas id="snowCanvas"></canvas>
+
     <nav>
         <div style="display: flex; align-items: center; gap: 10px;">
             <img src="image.png" alt="Logo" style="width: 40px; height: 40px; object-fit: contain; border-radius: 8px;">
@@ -532,6 +645,9 @@
             <a href="#" class="active">Product Detail</a>
         </div>
         <div class="nav-right">
+            <a href="https://leonsx-store.myr.id/portal" target="_blank" class="login-btn">
+                <i class="fas fa-user"></i> Login
+            </a>
             <button class="menu-btn"><i class="fas fa-bars"></i></button>
         </div>
     </nav>
@@ -604,7 +720,7 @@
                         <input type="email" id="custEmail" class="form-control" placeholder="Email Address" required>
                     </div>
                     <div class="form-group">
-                        <input type="tel" id="custPhone" class="form-control" placeholder="Phone Number (WhatsApp)" required>
+                        <input type="tel" id="custPhone" class="form-control" placeholder="Example: 081234567890 (WhatsApp)" required>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <input type="text" id="custCoupon" class="form-control" placeholder="Coupon Code (Optional)">
@@ -722,8 +838,16 @@
                     container.appendChild(btn);
                 });
 
+                // Auto-select first available variant if current selection is invalid or out of stock
                 if (currentVariantIndex === -1) {
-                    selectVariant(0);
+                    // Find first variant with stock > 0
+                    const firstAvailableIndex = currentProduct.variants.findIndex(v => (v.stockCount || 0) > 0);
+                    if (firstAvailableIndex !== -1) {
+                        selectVariant(firstAvailableIndex);
+                    } else {
+                        // If all out of stock, just select the first one
+                        selectVariant(0);
+                    }
                 } else {
                     // Re-select to update stock/price info from new data
                     selectVariant(currentVariantIndex);
@@ -824,14 +948,13 @@
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
         }
 
-        // --- Buy Now Logic (Mayar Integration) ---
-        window.buyNow = async function() {
+        // --- Buy Now Logic (Redirect to Checkout) ---
+        window.buyNow = function() {
             const qty = parseInt(document.getElementById('qty').value) || 1;
             const name = document.getElementById('custName').value;
             const email = document.getElementById('custEmail').value;
             const phone = document.getElementById('custPhone').value;
             const coupon = document.getElementById('custCoupon').value;
-            const btn = document.getElementById('buyNowBtn');
 
             if(!name || !email || !phone) {
                 alert("Please fill in your Name, Email, and Phone Number.");
@@ -850,75 +973,107 @@
                 return;
             }
 
-            btn.textContent = "Processing...";
-            btn.disabled = true;
+            // Prepare data for checkout
+            const orderData = {
+                productId: productId,
+                productName: currentProduct.name,
+                productImage: currentProduct.imageUrl,
+                variantIndex: currentVariantIndex,
+                variantName: currentVariantIndex !== -1 ? currentProduct.variants[currentVariantIndex].name : 'Standard',
+                quantity: qty,
+                pricePerUnit: currentPrice,
+                totalAmount: totalAmount,
+                customerName: name,
+                customerEmail: email,
+                customerPhone: phone,
+                coupon: coupon
+            };
 
-            try {
-                // 1. Request Payment Link from Worker
-                const targetUrl = `${WORKER_URL}/api/create-transaction`;
-                console.log("Calling Worker:", targetUrl);
+            // Save to LocalStorage
+            localStorage.setItem('pendingOrder', JSON.stringify(orderData));
 
-                const response = await fetch(targetUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        amount: totalAmount,
-                        description: `Order: ${currentProduct.name} (${currentVariantIndex !== -1 ? currentProduct.variants[currentVariantIndex].name : 'Standard'})`,
-                        customerName: name,
-                        customerEmail: email,
-                        customerPhone: phone
-                    })
-                });
-
-                const result = await response.json();
-                console.log("Worker Response:", result);
-
-                if (result.success && result.link && result.orderId) {
-                    // 2. SAVE ORDER TO FIRESTORE (Status: UNPAID)
-                    // Gunakan Custom Order ID sebagai ID Dokumen Firestore
-                    const orderId = result.orderId;
-                    const invoiceId = result.invoiceId; // Simpan juga ID Invoice Mayar
-
-                    await setDoc(doc(db, "orders", orderId), {
-                        orderId: orderId,
-                        invoiceId: invoiceId,
-                        productId: productId,
-                        productName: currentProduct.name,
-                        variantIndex: currentVariantIndex,
-                        variantName: currentVariantIndex !== -1 ? currentProduct.variants[currentVariantIndex].name : 'Standard',
-                        quantity: qty,
-                        totalAmount: totalAmount,
-                        customerName: name,
-                        customerEmail: email,
-                        customerPhone: phone,
-                        status: "UNPAID", // Status awal
-                        paymentLink: result.link,
-                        createdAt: serverTimestamp(),
-                        deliveredItems: [] // Array kosong untuk item yang akan dikirim nanti
-                    });
-
-                    console.log("Order saved to Firestore with ID:", orderId);
-
-                    // 3. Redirect to Payment Page
-                    console.log("Redirecting to:", result.link);
-                    window.location.href = result.link;
-                } else {
-                    // Tampilkan error lengkap dari server
-                    throw new Error(result.error || JSON.stringify(result));
-                }
-
-            } catch (error) {
-                console.error("Transaction failed: ", error);
-                // Tampilkan alert dengan pesan error yang lebih detail
-                alert("Transaction failed: " + error.message);
-                btn.textContent = "Buy Now";
-                btn.disabled = false;
-            }
+            // Redirect to Checkout Page
+            window.location.href = 'checkout.html';
         }
 
         // Init
         loadProduct();
 
+        // --- SNOW EFFECT SCRIPT ---
+        const canvas = document.getElementById('snowCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.radius = Math.random() * 2 + 0.5; // Size between 0.5 and 2.5
+                this.speed = Math.random() * 1 + 0.2; // Speed between 0.2 and 1.2
+                this.opacity = Math.random() * 0.5 + 0.1; // Opacity between 0.1 and 0.6
+            }
+
+            update() {
+                this.y += this.speed;
+                if (this.y > height) {
+                    this.y = -10;
+                    this.x = Math.random() * width;
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const particleCount = Math.floor(width * 0.1); // Adjust density based on screen width
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            resize();
+            initParticles();
+        });
+
+        resize();
+        initParticles();
+        animate();
     </script>
+    <!--Start of Tawk.to Script-->
+    <script type="text/javascript">
+        var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+        (function(){
+            var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+            s1.async=true;
+            s1.src='https://embed.tawk.to/698ec780e095b81c3be35a4c/1jharmkbs';
+            s1.charset='UTF-8';
+            s1.setAttribute('crossorigin','*');
+            s0.parentNode.insertBefore(s1,s0);
+        })();
+    </script>
+    <!--End of Tawk.to Script-->
 </body>
 </html>

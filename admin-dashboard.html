@@ -197,7 +197,7 @@
         }
 
         .filter-select {
-            background: rgba(255,255,255,0.05);
+            background: rgba(38,81,165,0.05);
             border: 1px solid var(--border-color);
             color: var(--text-main);
             padding: 0.6rem;
@@ -208,6 +208,7 @@
 
         .filter-select option {
             background: #1a0b2e;
+            color: #fff; /* Ensure option text is visible */
         }
 
         /* Table */
@@ -604,7 +605,7 @@
             <a onclick="switchTab('products')" class="menu-item active" id="nav-products">Products</a>
             <a onclick="switchTab('orders')" class="menu-item" id="nav-orders">Orders</a>
             <a href="#" class="menu-item">Users</a>
-            <a href="#" class="menu-item">Settings</a>
+            <a onclick="switchTab('settings')" class="menu-item" id="nav-settings">Settings</a>
 
             <button id="logoutBtn" class="logout-btn">Sign Out</button>
         </aside>
@@ -696,6 +697,21 @@
                         <span class="page-info" id="pageInfo">Page 1</span>
                         <button class="page-btn" id="nextPageBtn" onclick="changePage(1)" disabled>Next</button>
                     </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS SECTION -->
+            <div id="section-settings" class="page-section">
+                <div class="header">
+                    <h1>Settings</h1>
+                </div>
+                <div class="table-container" style="padding: 2rem;">
+                    <h3 class="section-title">Landing Page Settings</h3>
+                    <div class="form-group">
+                        <label>Total Buyers (Displayed on Landing Page)</label>
+                        <input type="number" id="settingTotalBuyers" class="form-control" placeholder="e.g. 5230">
+                    </div>
+                    <button onclick="saveSettings()" class="btn-submit" style="max-width: 200px;">Save Settings</button>
                 </div>
             </div>
 
@@ -807,6 +823,7 @@
                         loadProducts();
                         loadStats(); // Load stats on start
                         loadOrders(1); // Load orders on start
+                        loadSettings(); // Load settings on start
                     } else {
                         alert("Access Denied: You are not authorized.");
                         await signOut(auth);
@@ -917,6 +934,12 @@
                         <input type="text" class="form-control mb-2" id="emailpass-${variant.id}" placeholder="Email Pass">
                         <input type="text" class="form-control mb-2" id="webmail-${variant.id}" placeholder="Webmail (Note)">
                     `;
+                } else if (stockType === 'epic_gtav') {
+                    stockFormHtml = `
+                        <input type="text" class="form-control mb-2" id="email-${variant.id}" placeholder="Email">
+                        <input type="text" class="form-control mb-2" id="pass-${variant.id}" placeholder="Password">
+                        <input type="text" class="form-control mb-2" id="note-${variant.id}" placeholder="Note (Optional)">
+                    `;
                 } else if (stockType === 'license') {
                     stockFormHtml = `
                         <input type="text" class="form-control mb-2" id="license-${variant.id}" placeholder="License Code">
@@ -971,6 +994,7 @@
                                 <label style="font-size:0.8rem; color:var(--text-muted);">Stock Type</label>
                                 <select class="form-control" id="edit-type-${variant.id}" onchange="updateVariantType(${index}, this.value)">
                                     <option value="fivem" ${stockType === 'fivem' ? 'selected' : ''}>Akun Fivem</option>
+                                    <option value="epic_gtav" ${stockType === 'epic_gtav' ? 'selected' : ''}>Epic GTA V</option>
                                     <option value="license" ${stockType === 'license' ? 'selected' : ''}>License Code</option>
                                     <option value="description" ${stockType === 'description' ? 'selected' : ''}>Description Only</option>
                                     <option value="2fa" ${stockType === '2fa' ? 'selected' : ''}>2FA Account</option>
@@ -999,6 +1023,9 @@
                                     displayText = `${acc.email} | ${acc.password}`;
                                     if(acc.emailpass) displayText += ` | ${acc.emailpass}`;
                                     if(acc.webmail) displayText += ` | ${acc.webmail}`;
+                                } else if (stockType === 'epic_gtav') {
+                                    displayText = `${acc.email} | ${acc.password}`;
+                                    if(acc.note) displayText += ` | ${acc.note}`;
                                 } else if (stockType === 'license') {
                                     displayText = `${acc.license}`;
                                     if(acc.note) displayText += ` | ${acc.note}`;
@@ -1036,6 +1063,10 @@
                 document.getElementById(`pass-${variant.id}`).value = account.password || '';
                 document.getElementById(`emailpass-${variant.id}`).value = account.emailpass || '';
                 document.getElementById(`webmail-${variant.id}`).value = account.webmail || '';
+            } else if (stockType === 'epic_gtav') {
+                document.getElementById(`email-${variant.id}`).value = account.email || '';
+                document.getElementById(`pass-${variant.id}`).value = account.password || '';
+                document.getElementById(`note-${variant.id}`).value = account.note || '';
             } else if (stockType === 'license') {
                 document.getElementById(`license-${variant.id}`).value = account.license || '';
                 document.getElementById(`note-${variant.id}`).value = account.note || '';
@@ -1099,6 +1130,15 @@
                 account.password = pass;
                 account.emailpass = document.getElementById(`emailpass-${variant.id}`).value;
                 account.webmail = document.getElementById(`webmail-${variant.id}`).value;
+
+            } else if (stockType === 'epic_gtav') {
+                const email = document.getElementById(`email-${variant.id}`).value;
+                const pass = document.getElementById(`pass-${variant.id}`).value;
+                if(!email || !pass) return alert("Email and Password are required");
+
+                account.email = email;
+                account.password = pass;
+                account.note = document.getElementById(`note-${variant.id}`).value;
 
             } else if (stockType === 'license') {
                 const license = document.getElementById(`license-${variant.id}`).value;
@@ -1202,6 +1242,22 @@
                 document.getElementById(`pass-${variant.id}`).value = '';
                 document.getElementById(`emailpass-${variant.id}`).value = '';
                 document.getElementById(`webmail-${variant.id}`).value = '';
+
+            } else if (stockType === 'epic_gtav') {
+                const email = document.getElementById(`email-${variant.id}`).value;
+                const pass = document.getElementById(`pass-${variant.id}`).value;
+                const note = document.getElementById(`note-${variant.id}`).value;
+
+                if(!email || !pass) return alert("Email and Password are required");
+
+                newAccount.email = email;
+                newAccount.password = pass;
+                newAccount.note = note;
+
+                // Clear inputs
+                document.getElementById(`email-${variant.id}`).value = '';
+                document.getElementById(`pass-${variant.id}`).value = '';
+                document.getElementById(`note-${variant.id}`).value = '';
 
             } else if (stockType === 'license') {
                 const license = document.getElementById(`license-${variant.id}`).value;
@@ -1565,6 +1621,34 @@
                 }
             } catch (error) {
                 console.error("Error loading stats:", error);
+            }
+        }
+
+        // 8. Settings Logic
+        async function loadSettings() {
+            try {
+                const docRef = doc(db, "settings", "landing_page");
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    document.getElementById('settingTotalBuyers').value = docSnap.data().totalBuyers || 5230;
+                }
+            } catch (error) {
+                console.error("Error loading settings:", error);
+            }
+        }
+
+        window.saveSettings = async function() {
+            const totalBuyers = document.getElementById('settingTotalBuyers').value;
+            if (!totalBuyers) return alert("Please enter a value");
+
+            try {
+                await setDoc(doc(db, "settings", "landing_page"), {
+                    totalBuyers: Number(totalBuyers)
+                });
+                alert("Settings saved!");
+            } catch (error) {
+                console.error("Error saving settings:", error);
+                alert("Failed to save settings");
             }
         }
 
