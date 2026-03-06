@@ -100,6 +100,12 @@
             border-bottom: 1px solid var(--border-color);
         }
 
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .logo {
             font-weight: 800;
             font-size: 1.5rem;
@@ -107,6 +113,7 @@
             background: linear-gradient(to right, #fff, #a78bfa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            white-space: nowrap; /* Prevent wrapping */
         }
 
         .nav-links {
@@ -1260,30 +1267,65 @@
             .nav-links {
                 position: absolute;
                 top: 100%;
-                left: 0;
-                width: 100%;
-                background: rgba(5, 5, 5, 0.95);
-                backdrop-filter: blur(20px);
-                border-bottom: 1px solid var(--border-color);
-                padding: 2rem;
+                left: auto; /* Reset left */
+                right: 5%; /* Align to right */
+                transform: none; /* Reset transform */
+                width: 220px; /* Fixed width for dropdown look */
+                background: rgba(15, 15, 17, 0.85); /* More transparent */
+                backdrop-filter: blur(15px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 16px;
+                padding: 1.5rem;
                 flex-direction: column;
-                align-items: center;
-                gap: 1.5rem;
+                align-items: flex-start; /* Align text to left */
+                gap: 1rem;
                 display: none;
-                transform: none;
+
+                /* Animation */
+                opacity: 0;
+                pointer-events: none;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                transform: translateY(-10px);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.4);
             }
 
             .nav-links.active {
                 display: flex;
+                opacity: 1;
+                pointer-events: auto;
+                transform: translateY(10px); /* Add some spacing from header */
             }
 
             .nav-links a {
                 margin-right: 0;
-                font-size: 1.2rem;
+                font-size: 1rem;
+                padding: 0.5rem;
+                width: 100%;
+                text-align: left; /* Left align text */
+                border-radius: 8px;
+            }
+
+            .nav-links a:hover {
+                background: rgba(255,255,255,0.05);
+                padding-left: 1rem; /* Slide effect on hover */
             }
 
             .menu-btn {
                 display: block;
+            }
+
+            /* Logo adjustments for mobile */
+            .logo {
+                font-size: 1.2rem; /* Smaller font size on mobile */
+            }
+
+            nav {
+                padding: 1rem 5%; /* Slightly less padding */
+            }
+
+            .logo-container img {
+                width: 32px; /* Smaller logo image */
+                height: 32px;
             }
         }
     </style>
@@ -1294,7 +1336,7 @@
     <canvas id="snowCanvas"></canvas>
 
     <nav>
-        <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="logo-container">
             <img src="image.png" alt="Logo" style="width: 40px; height: 40px; object-fit: contain; border-radius: 8px;">
             <div class="logo">Leon'sx Store</div>
         </div>
@@ -1437,9 +1479,13 @@
             <h2 class="section-title">Latest Products</h2>
         </div>
 
-        <div class="product-grid" id="productGrid">
-            <!-- Products will be loaded here dynamically -->
-            <div style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Loading products...</div>
+        <!-- Container for Dynamic Categories -->
+        <div id="dynamicProductSections">
+            <!-- Categories and products will be injected here -->
+            <div class="product-grid" id="productGrid">
+                <!-- Fallback for uncategorized or loading -->
+                <div style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Loading products...</div>
+            </div>
         </div>
     </main>
 
@@ -1633,100 +1679,145 @@
 
         // --- Product Logic (Realtime) ---
         function loadProducts() {
-            const grid = document.getElementById('productGrid');
-            const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
+            const container = document.getElementById('dynamicProductSections');
 
-            // Use onSnapshot for realtime updates
-            const unsubscribe = onSnapshot(q, (querySnapshot) => {
-                grid.innerHTML = "";
-                let totalPlatformSold = 0; // Variable to sum up all sold counts
+            // 1. Fetch Categories first
+            const catQuery = query(collection(db, "categories"), orderBy("order", "asc"));
 
-                if (querySnapshot.empty) {
-                    grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No products available yet.</div>`;
-                    // Even if empty, update stats to 0
-                    updateStatElement('stat-sold', 0, "+");
-                    return;
-                }
-
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const productId = doc.id;
-
-                    // Sum up sold count for stats
-                    if (data.soldCount) {
-                        totalPlatformSold += data.soldCount;
-                    }
-
-                    let priceDisplay = "";
-                    let totalStock = 0;
-
-                    // Calculate Total Stock
-                    if (data.hasVariants && data.variants) {
-                        // Sum stock from all variants
-                        totalStock = data.variants.reduce((sum, v) => sum + (v.stockCount || 0), 0);
-
-                        const prices = data.variants.map(v => v.price || data.price);
-                        const minPrice = Math.min(...prices);
-                        priceDisplay = `${formatRupiah(minPrice)}`;
-                    } else {
-                        totalStock = data.stock || 0;
-                        priceDisplay = formatRupiah(data.price);
-                    }
-
-                    // Stock Indicator Color
-                    const stockClass = totalStock > 0 ? '' : 'out';
-                    const stockText = totalStock > 0 ? `${totalStock} in stock` : 'Out of Stock';
-
-                    // Image Handling
-                    const bannerContent = data.imageUrl
-                        ? `<img src="${data.imageUrl}" alt="${data.name}">`
-                        : `<span>IMG</span>`;
-
-                    // Sold Count Badge
-                    let soldBadgeHtml = '';
-                    if (data.soldCount && data.soldCount > 0) {
-                        soldBadgeHtml = `
-                            <div class="card-sold-badge">
-                                <i class="fas fa-fire"></i> ${data.soldCount} Sold
-                            </div>
-                        `;
-                    }
-
-                    const card = document.createElement('div');
-                    card.className = 'product-card reveal'; // Add reveal class for animation
-                    card.onclick = () => window.location.href = `detail-prod.html?id=${productId}`;
-
-                    card.innerHTML = `
-                        ${soldBadgeHtml}
-                        <div class="card-banner">
-                            ${bannerContent}
-                        </div>
-                        <div class="card-content">
-                            <div class="card-title">${data.name}</div>
-                            <div class="card-stock">
-                                <span class="stock-indicator ${stockClass}"></span> ${stockText}
-                            </div>
-                            <div class="card-footer">
-                                <span class="price">${priceDisplay}</span>
-                                <button class="buy-btn">Buy Now</button>
-                            </div>
-                        </div>
-                    `;
-                    grid.appendChild(card);
-
-                    // Observe the new card for animation
-                    if (typeof observer !== 'undefined') {
-                        observer.observe(card);
-                    }
+            onSnapshot(catQuery, (catSnapshot) => {
+                const categories = [];
+                catSnapshot.forEach(doc => {
+                    categories.push({ id: doc.id, ...doc.data() });
                 });
 
-                // Update the "Total Produk Terjual" stat
-                updateStatElement('stat-sold', totalPlatformSold, "+");
+                // 2. Fetch Products
+                const prodQuery = query(collection(db, "products"), orderBy("createdAt", "desc"));
 
-            }, (error) => {
-                console.error("Error loading products:", error);
-                grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #ef4444;">Failed to load products.</div>`;
+                onSnapshot(prodQuery, (prodSnapshot) => {
+                    container.innerHTML = ""; // Clear existing content
+                    let totalPlatformSold = 0;
+
+                    const products = [];
+                    prodSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        products.push({ id: doc.id, ...data });
+                        if (data.soldCount) totalPlatformSold += data.soldCount;
+                    });
+
+                    // Update Stats
+                    updateStatElement('stat-sold', totalPlatformSold, "+");
+
+                    if (products.length === 0) {
+                        container.innerHTML = `<div style="text-align: center; color: var(--text-muted);">No products available yet.</div>`;
+                        return;
+                    }
+
+                    // 3. Group Products by Category
+                    // Create sections for each category
+                    categories.forEach(cat => {
+                        const catProducts = products.filter(p => p.category === cat.id);
+
+                        if (catProducts.length > 0) {
+                            renderCategorySection(container, cat.name, catProducts);
+                        }
+                    });
+
+                    // Handle Uncategorized Products
+                    const uncategorizedProducts = products.filter(p => !p.category || !categories.find(c => c.id === p.category));
+                    if (uncategorizedProducts.length > 0) {
+                        renderCategorySection(container, "Other Products", uncategorizedProducts);
+                    }
+
+                }, (error) => {
+                    console.error("Error loading products:", error);
+                    container.innerHTML = `<div style="text-align: center; color: #ef4444;">Failed to load products.</div>`;
+                });
             });
+        }
+
+        function renderCategorySection(container, title, products) {
+            // Create Section Header
+            const sectionDiv = document.createElement('div');
+            sectionDiv.style.marginBottom = "3rem";
+
+            const header = document.createElement('h3');
+            header.className = "section-title reveal";
+            header.style.fontSize = "1.5rem";
+            header.style.marginBottom = "1.5rem";
+            header.style.borderLeft = "4px solid var(--primary)";
+            header.style.paddingLeft = "1rem";
+            header.textContent = title;
+            sectionDiv.appendChild(header);
+
+            // Create Grid
+            const grid = document.createElement('div');
+            grid.className = "product-grid";
+
+            products.forEach(data => {
+                const productId = data.id;
+                let priceDisplay = "";
+                let totalStock = 0;
+
+                // Calculate Total Stock
+                if (data.hasVariants && data.variants) {
+                    totalStock = data.variants.reduce((sum, v) => sum + (v.stockCount || 0), 0);
+                    const prices = data.variants.map(v => v.price || data.price);
+                    const minPrice = Math.min(...prices);
+                    priceDisplay = `${formatRupiah(minPrice)}`;
+                } else {
+                    totalStock = data.stock || 0;
+                    priceDisplay = formatRupiah(data.price);
+                }
+
+                const stockClass = totalStock > 0 ? '' : 'out';
+                const stockText = totalStock > 0 ? `${totalStock} in stock` : 'Out of Stock';
+
+                const bannerContent = data.imageUrl
+                    ? `<img src="${data.imageUrl}" alt="${data.name}">`
+                    : `<span>IMG</span>`;
+
+                let soldBadgeHtml = '';
+                if (data.soldCount && data.soldCount > 0) {
+                    soldBadgeHtml = `
+                        <div class="card-sold-badge">
+                            <i class="fas fa-fire"></i> ${data.soldCount} Sold
+                        </div>
+                    `;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'product-card reveal';
+                card.onclick = () => window.location.href = `detail-prod.html?id=${productId}`;
+
+                card.innerHTML = `
+                    ${soldBadgeHtml}
+                    <div class="card-banner">
+                        ${bannerContent}
+                    </div>
+                    <div class="card-content">
+                        <div class="card-title">${data.name}</div>
+                        <div class="card-stock">
+                            <span class="stock-indicator ${stockClass}"></span> ${stockText}
+                        </div>
+                        <div class="card-footer">
+                            <span class="price">${priceDisplay}</span>
+                            <button class="buy-btn">Buy Now</button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+
+                if (typeof observer !== 'undefined') {
+                    observer.observe(card);
+                }
+            });
+
+            sectionDiv.appendChild(grid);
+            container.appendChild(sectionDiv);
+
+            if (typeof observer !== 'undefined') {
+                observer.observe(header);
+            }
         }
 
         // --- Stats Logic ---

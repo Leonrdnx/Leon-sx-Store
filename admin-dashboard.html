@@ -402,6 +402,11 @@
             border-color: var(--primary);
         }
 
+        .form-control option {
+            background: #1a0b2e;
+            color: #fff;
+        }
+
         .btn-submit {
             width: 100%;
             padding: 0.8rem;
@@ -582,6 +587,14 @@
             border-radius: 6px;
             margin-bottom: 0.5rem;
             font-size: 0.85rem;
+            cursor: grab; /* Drag cursor */
+            transition: all 0.2s ease;
+        }
+
+        .stock-item.dragging {
+            opacity: 0.5;
+            background: var(--primary);
+            border: 1px dashed #fff;
         }
 
         .stock-item.sold {
@@ -712,6 +725,23 @@
                         <input type="number" id="settingTotalBuyers" class="form-control" placeholder="e.g. 5230">
                     </div>
                     <button onclick="saveSettings()" class="btn-submit" style="max-width: 200px;">Save Settings</button>
+
+                    <div class="section-divider"></div>
+
+                    <h3 class="section-title">Product Categories</h3>
+                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">Drag and drop to reorder categories. Changes are saved automatically.</p>
+
+                    <div class="variant-creation-box" style="grid-template-columns: 2fr auto;">
+                        <div>
+                            <label>Category Name</label>
+                            <input type="text" id="newCatName" class="form-control" placeholder="e.g. Best Seller">
+                        </div>
+                        <button onclick="addCategory()" class="btn-small">Add Category</button>
+                    </div>
+
+                    <div id="categoriesList" class="stock-list" style="margin-top: 1rem;">
+                        <!-- Categories List -->
+                    </div>
                 </div>
             </div>
 
@@ -733,6 +763,13 @@
                     <div id="imagePreview" class="image-preview-container">
                         <img src="" alt="Preview" id="previewImg">
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="prodCategory" class="form-control">
+                        <option value="">Uncategorized</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
@@ -795,7 +832,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, getDoc, updateDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { firebaseConfig, WORKER_URL } from './config.js';
 
         const app = initializeApp(firebaseConfig);
@@ -824,6 +861,7 @@
                         loadStats(); // Load stats on start
                         loadOrders(1); // Load orders on start
                         loadSettings(); // Load settings on start
+                        loadCategoriesSettings(); // Load categories
                     } else {
                         alert("Access Denied: You are not authorized.");
                         await signOut(auth);
@@ -878,6 +916,154 @@
                 previewImg.src = '';
             }
         });
+
+        // --- CATEGORY LOGIC ---
+        async function loadCategoriesSettings() {
+            const q = query(collection(db, "categories"), orderBy("order", "asc"));
+            onSnapshot(q, (snapshot) => {
+                const container = document.getElementById('categoriesList');
+                const select = document.getElementById('prodCategory');
+
+                container.innerHTML = '';
+                // Save current selection if any
+                const currentSelection = select.value;
+
+                // Reset select but keep "Uncategorized"
+                select.innerHTML = '<option value="">Uncategorized</option>';
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+
+                    // Add to Settings List (Draggable)
+                    const item = document.createElement('div');
+                    item.className = 'stock-item';
+                    item.draggable = true;
+                    item.dataset.id = doc.id;
+                    item.innerHTML = `
+                        <span><i class="fas fa-grip-vertical" style="margin-right:10px; color:var(--text-muted);"></i> <b>${data.name}</b> (Priority: ${data.order})</span>
+                        <button class="action-btn delete" onclick="deleteCategory('${doc.id}')">&times;</button>
+                    `;
+
+                    // Drag Events
+                    item.addEventListener('dragstart', handleDragStart);
+                    item.addEventListener('dragend', handleDragEnd);
+
+                    container.appendChild(item);
+
+                    // Add to Modal Select
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = data.name;
+                    select.appendChild(option);
+                });
+
+                // Container Drag Over
+                container.addEventListener('dragover', handleDragOver);
+
+                // Restore selection if possible
+                if(currentSelection) {
+                    // Check if the option still exists
+                    if(select.querySelector(`option[value="${currentSelection}"]`)) {
+                        select.value = currentSelection;
+                    }
+                }
+            });
+        }
+
+        // Drag & Drop Handlers
+        function handleDragStart(e) {
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            saveCategoryOrder(); // Save order after drop
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            const container = document.getElementById('categoriesList');
+            const afterElement = getDragAfterElement(container, e.clientY);
+            const draggable = document.querySelector('.dragging');
+            if (afterElement == null) {
+                container.appendChild(draggable);
+            } else {
+                container.insertBefore(draggable, afterElement);
+            }
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.stock-item:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        async function saveCategoryOrder() {
+            const container = document.getElementById('categoriesList');
+            const items = container.querySelectorAll('.stock-item');
+            const batch = writeBatch(db);
+            let hasUpdates = false;
+
+            items.forEach((item, index) => {
+                const id = item.dataset.id;
+                const newOrder = index + 1;
+
+                // Update UI text immediately for better UX
+                const span = item.querySelector('span');
+                const name = span.querySelector('b').textContent;
+                span.innerHTML = `<i class="fas fa-grip-vertical" style="margin-right:10px; color:var(--text-muted);"></i> <b>${name}</b> (Priority: ${newOrder})`;
+
+                const docRef = doc(db, "categories", id);
+                batch.update(docRef, { order: newOrder });
+                hasUpdates = true;
+            });
+
+            if (hasUpdates) {
+                try {
+                    await batch.commit();
+                    console.log("Category order updated");
+                } catch (e) {
+                    console.error("Error updating order:", e);
+                    alert("Failed to save category order");
+                }
+            }
+        }
+
+        window.addCategory = async function() {
+            const name = document.getElementById('newCatName').value;
+            // Order will be last + 1, or 1 if empty
+            const container = document.getElementById('categoriesList');
+            const count = container.children.length;
+            const order = count + 1;
+
+            if(!name) return alert("Name is required");
+
+            try {
+                await addDoc(collection(db, "categories"), {
+                    name: name,
+                    order: Number(order),
+                    createdAt: new Date()
+                });
+                document.getElementById('newCatName').value = '';
+            } catch(e) {
+                console.error(e);
+                alert("Error adding category");
+            }
+        }
+
+        window.deleteCategory = async function(id) {
+            if(confirm("Delete this category? Products in this category will become Uncategorized.")) {
+                await deleteDoc(doc(db, "categories", id));
+            }
+        }
 
         // --- VARIANT & STOCK LOGIC ---
         let variantsState = [];
@@ -1325,6 +1511,7 @@
             document.getElementById('editProductId').value = "";
             document.getElementById('imagePreview').style.display = 'none';
             document.getElementById('previewImg').src = "";
+            document.getElementById('prodCategory').value = ""; // Reset category
             variantsState = [];
             renderVariantCards();
         }
@@ -1335,6 +1522,7 @@
             const submitBtn = document.getElementById('submitBtn');
             const editId = document.getElementById('editProductId').value;
             const imageUrl = document.getElementById('prodImageUrl').value.trim();
+            const categoryId = document.getElementById('prodCategory').value;
 
             submitBtn.textContent = "Saving...";
             submitBtn.disabled = true;
@@ -1363,6 +1551,7 @@
                     originalPrice: originalPrice,
                     description: desc,
                     imageUrl: imageUrl,
+                    category: categoryId || null, // Save category
                     hasVariants: variantsState.length > 0,
                     variants: publicVariants,
                     stock: totalStock,
@@ -1434,6 +1623,11 @@
                     }
                     document.getElementById('prodDesc').value = data.description;
                     document.getElementById('prodSoldCount').value = data.soldCount || 0;
+
+                    // Set Category
+                    if (data.category) {
+                        document.getElementById('prodCategory').value = data.category;
+                    }
 
                     if (data.imageUrl) {
                         document.getElementById('prodImageUrl').value = data.imageUrl;
