@@ -84,12 +84,6 @@
             gap: 2rem;
         }
 
-        @media (max-width: 768px) {
-            .checkout-container {
-                grid-template-columns: 1fr;
-            }
-        }
-
         .section-title {
             font-size: 1.5rem;
             font-weight: 700;
@@ -183,43 +177,46 @@
 
         /* Payment Methods */
         .payment-methods-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 1rem;
             margin-top: 1rem;
         }
 
         .payment-method-item {
-            background: rgba(255,255,255,0.05); /* Slightly lighter background */
+            background: rgba(255,255,255,0.05);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 0.8rem;
             display: flex;
+            flex-direction: column; /* To match index.html format if status is added later, or just for centering */
             align-items: center;
             justify-content: center;
             height: 60px;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy transition */
+            width: 120px; /* Fixed width similar to index.html to ensure wrapping behaves correctly */
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
             overflow: hidden;
+            flex-grow: 0;
         }
 
         .payment-method-item img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            /* Removed grayscale filter to show original colors */
             transition: transform 0.3s ease;
         }
 
         .payment-method-item:hover {
             border-color: var(--primary);
-            background: rgba(139, 92, 246, 0.15); /* Highlight background */
-            transform: translateY(-5px); /* Lift effect */
-            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.2); /* Glow shadow */
+            background: rgba(139, 92, 246, 0.15);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.2);
         }
 
         .payment-method-item:hover img {
-            transform: scale(1.1); /* Slight zoom on logo */
+            transform: scale(1.1);
         }
 
         /* Checkout Button */
@@ -264,6 +261,79 @@
             margin-top: 1rem;
             font-weight: 500;
         }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .checkout-container {
+                grid-template-columns: 1fr;
+                margin: 1.5rem auto;
+                padding: 0 1rem;
+            }
+            .checkout-card {
+                padding: 1.2rem;
+                border-radius: 12px;
+                margin-bottom: 1rem;
+            }
+            .section-title {
+                font-size: 1.2rem;
+                margin-bottom: 1rem;
+            }
+            .data-value {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+            }
+            .payment-methods-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 0.5rem;
+                justify-items: center;
+            }
+            .payment-method-item {
+                height: 45px;
+                width: 100%; /* Take full width of grid cell on mobile */
+                padding: 0.4rem;
+                border-radius: 8px;
+            }
+            .product-preview {
+                gap: 0.8rem;
+                margin-bottom: 1rem;
+                padding-bottom: 1rem;
+            }
+            .product-img {
+                width: 60px;
+                height: 60px;
+                border-radius: 8px;
+            }
+            .product-details h4 {
+                font-size: 1rem;
+            }
+            .product-details p {
+                font-size: 0.8rem;
+            }
+            .summary-item {
+                font-size: 0.85rem;
+                margin-bottom: 0.6rem;
+            }
+            .summary-item.total {
+                font-size: 1.1rem;
+                margin-top: 0.6rem;
+                padding-top: 0.6rem;
+            }
+            .btn-checkout {
+                padding: 0.8rem;
+                font-size: 1rem;
+                margin-top: 1.5rem;
+            }
+            .secure-badge {
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .payment-methods-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
     </style>
 </head>
 <body>
@@ -304,17 +374,18 @@
             </div>
 
             <div class="checkout-card">
-                <h2 class="section-title">Payment Methods</h2>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">Supported payments via Mayar:</p>
+                <h2 class="section-title" style="text-align: center;">Payment Methods</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; text-align: center;">Supported payments via Mayar:</p>
                 <div class="payment-methods-grid">
-                    <div class="payment-method-item" title="QRIS"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Logo_QRIS.svg/1200px-Logo_QRIS.svg.png" alt="QRIS"></div>
-                    <div class="payment-method-item" title="GoPay"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Gopay_logo.svg/2560px-Gopay_logo.svg.png" alt="GoPay"></div>
-                    <div class="payment-method-item" title="OVO"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Logo_ovo_purple.svg/2560px-Logo_ovo_purple.svg.png" alt="OVO"></div>
-                    <div class="payment-method-item" title="DANA"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Logo_dana_blue.svg/2560px-Logo_dana_blue.svg.png" alt="DANA"></div>
-                    <div class="payment-method-item" title="ShopeePay"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Shopee.svg/2560px-Shopee.svg.png" alt="ShopeePay"></div>
-                    <div class="payment-method-item" title="LinkAja"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/LinkAja.svg/2048px-LinkAja.svg.png" alt="LinkAja"></div>
-                    <div class="payment-method-item" title="Bank Transfer"><img src="https://www.svgrepo.com/show/496837/bank.svg" alt="Bank"></div>
-                    <div class="payment-method-item" title="Indomaret"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Logo_Indomaret.png/1200px-Logo_Indomaret.png" alt="Indomaret"></div>
+                    <div class="payment-method-item" title="QRIS"><img src="logo_payment/qris.png" alt="QRIS"></div>
+                    <div class="payment-method-item" title="GoPay"><img src="logo_payment/gopay2.png" alt="GoPay"></div>
+                    <div class="payment-method-item" title="OVO"><img src="logo_payment/Ovo.png" alt="OVO"></div>
+                    <div class="payment-method-item" title="DANA"><img src="logo_payment/dana.png" alt="DANA"></div>
+                    <div class="payment-method-item" title="ShopeePay"><img src="logo_payment/Shopee.svg.png" alt="ShopeePay"></div>
+                    <div class="payment-method-item" title="LinkAja"><img src="logo_payment/LinkAja.svg.png" alt="LinkAja"></div>
+                    <div class="payment-method-item" title="Bank Transfer"><img src="logo_payment/bank.svg" alt="Bank"></div>
+                    <div class="payment-method-item" title="Indomaret"><img src="logo_payment/Indomaret.png" alt="Indomaret"></div>
+                    <div class="payment-method-item" title="Alfamart"><img src="logo_payment/alfamart.png" alt="Alfamart"></div>
                 </div>
             </div>
         </div>
