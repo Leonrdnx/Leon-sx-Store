@@ -241,6 +241,11 @@
             word-break: break-all;
         }
 
+        .field-value.desc-text {
+            font-family: 'Outfit', sans-serif;
+            white-space: pre-wrap;
+        }
+
         .copy-btn {
             background: rgba(255,255,255,0.1);
             border: none;
@@ -696,6 +701,7 @@
                     if(item.license) contentHtml += createFieldRow('License Key', item.license);
                     if(item.twofa) contentHtml += createFieldRow('2FA Code', item.twofa);
                     if(item.note) contentHtml += createFieldRow('Note', item.note);
+                    if(item.description) contentHtml += createFieldRow('Description', item.description, true);
 
                     if(contentHtml === '') {
                          contentHtml = `<div style="padding:1rem; color:var(--text-muted);">Detail akun tersembunyi atau format tidak dikenali.</div>`;
@@ -774,12 +780,13 @@
             icon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
         }
 
-        function createFieldRow(label, value) {
+        function createFieldRow(label, value, isDesc = false) {
+            const valClass = isDesc ? 'field-value desc-text' : 'field-value';
             return `
                 <div class="field-row">
                     <div style="overflow:hidden;">
                         <span class="field-label">${label}</span>
-                        <span class="field-value">${value}</span>
+                        <span class="${valClass}">${value}</span>
                     </div>
                     <button class="copy-btn" onclick="copyText('${value}', this)">
                         <i class="fas fa-copy"></i>
