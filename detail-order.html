@@ -353,6 +353,13 @@
             width: 100%;
         }
 
+        /* New class for side-by-side buttons */
+        .btn-half {
+            grid-column: span 1 !important;
+            margin: 0 !important;
+            max-width: none !important;
+        }
+
         .btn-primary:hover {
             background: var(--accent);
         }
@@ -725,6 +732,8 @@
 
             // Buttons
             const btnContainer = document.getElementById('actionButtons');
+            // Ensure action grid handles these side by side on desktop, stacked on mobile
+            // The default .action-grid styling does this if we use two buttons
             btnContainer.innerHTML = `
                 <a href="https://wa.me/6281350919038" target="_blank" class="btn btn-outline">
                     <i class="fab fa-whatsapp"></i> Whatsapp
@@ -732,7 +741,7 @@
                 <a href="https://discord.gg/8Ew7rctZSM" target="_blank" class="btn btn-outline">
                     <i class="fab fa-discord"></i> Discord
                 </a>
-                <a href="index.html" class="btn btn-primary">
+                <a href="index.html" class="btn btn-primary" style="grid-column: span 2; margin: 0 auto;">
                     <i class="fas fa-home"></i> Back to Home
                 </a>
             `;
@@ -752,11 +761,13 @@
             document.getElementById('contactSupportLabel').style.display = 'none';
 
             const btnContainer = document.getElementById('actionButtons');
+            // By making grid-template-columns: 1fr 1fr and adding btn-half to btn-primary,
+            // they will sit side-by-side on PC and stack on mobile automatically based on existing media queries
             btnContainer.innerHTML = `
                 <button onclick="window.location.reload()" class="btn btn-outline">
                     <i class="fas fa-sync"></i> Refresh Status
                 </button>
-                <a href="${paymentLink}" class="btn btn-primary" style="background: var(--warning); color: #000;">
+                <a href="${paymentLink}" class="btn btn-primary btn-half" style="background: var(--warning); color: #000;">
                     <i class="fas fa-credit-card"></i> Pay Now
                 </a>
             `;
